@@ -14,13 +14,17 @@ class User extends Model implements
 {
     use Authenticatable, Authorizable;
 
+    protected $table = 'User';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'name', 'email',
+        'name',
+        'password',
+        'api_token',
     ];
 
     /**
@@ -29,6 +33,23 @@ class User extends Model implements
      * @var array
      */
     protected $hidden = [
-        'password',
+        'password', 'api_token'
     ];
+
+    public function toArrayPublic()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name
+        ];
+    }
+
+    public function toArrayPrivate()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'api_token' => $this->api_token
+        ];
+    }
 }

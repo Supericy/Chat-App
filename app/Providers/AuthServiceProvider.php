@@ -2,13 +2,21 @@
 
 namespace App\Providers;
 
+use App\Chat\Api\AuthorizationHeader;
+use App\Chat\Api\TokenAuthentication;
 use App\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
+    /**
+     * @var TokenAuthentication
+     */
+    private $tokenAuthentication;
+
     /**
      * Register any application services.
      *
@@ -17,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     public function register()
     {
         //
+
+        $this->tokenAuthentication = new TokenAuthentication();
     }
 
     /**
@@ -31,10 +41,11 @@ class AuthServiceProvider extends ServiceProvider
         // should return either a User instance or null. You're free to obtain
         // the User instance via an API token or any other method necessary.
 
-        Auth::viaRequest('api', function ($request) {
-            if ($request->input('api_token')) {
-                return User::where('api_token', $request->input('api_token'))->first();
-            }
+        Auth::viaRequest('api', function (Request $request) {
+
+            $authorizationHeader = AuthorizationHeader::parseAuthorizationHeader($request->header('Authorization'));
+
+            return $this->tokenAuthentication->authenticate($authorizationHeader);
         });
     }
 }

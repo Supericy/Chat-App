@@ -16,11 +16,11 @@ $app->get('/', function () use ($app) {
 });
 
 $app->group(['prefix' => '/api/v1'], function () use ($app) {
-    $app->post('auth', 'App\Http\Controllers\UserAuthController@authenticate');
     $app->post('pusher/auth', 'App\Http\Controllers\PusherAuthController@authenticate');
 //    $app->get ('users', 'App\Http\Controllers\UserController@getAll');
 
     $app->post('/user', 'App\Http\Controllers\CreateUserController@create');
+    $app->post('/user/auth', 'App\Http\Controllers\UserAuthController@authenticate');
 //    $app->get ('/user/{id}', 'App\Http\Controllers\UserController@retrieve');
 
     $app->post('/chat/send', 'App\Http\Controllers\ChatController@sendMessage');

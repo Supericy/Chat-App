@@ -24,7 +24,7 @@ body {
     /*width: 745px;*/
     /*height: 555px;*/
     height: 100%;
-    background-color: #fff;
+    background: transparent;
     /*border-radius: 3px;*/
     /*box-shadow: 0 0 25px #3a9fc4;*/
     -webkit-box-orient: horizontal;
@@ -37,6 +37,17 @@ body {
     display: -ms-flexbox;
     display: flex;
     overflow: hidden;
+}
+
+.ui .is-typing {
+    height: 16px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+}
+
+.ui .is-typing span:nth-child(2)::before {
+    content: ", ";
 }
 
 .ui .left-menu {
@@ -196,7 +207,7 @@ body {
 }
 
 .ui .messages {
-    height: calc(100% - 70px - 150px);
+    height: calc(100% - 70px - 170px);
     list-style: none;
     border: 2px solid #fff;
     border-left: none;
@@ -204,7 +215,7 @@ body {
 }
 
 .ui .messages li {
-    margin: 10px;
+    margin: 16px;
     -webkit-transition: all .5s;
     transition: all .5s;
 }
@@ -238,11 +249,12 @@ body {
 }
 
 .ui .messages li .message {
-    margin-top: 20px;
+    margin-top: 10px;
+
     color: #fff;
-    font-size: 15px;
-    border-radius: 3px;
-    padding: 20px;
+    font-size: 14px;
+    border-radius: 5px;
+    padding: 8px 14px;
     line-height: 25px;
     max-width: 500px;
     word-wrap: break-word;
@@ -250,15 +262,12 @@ body {
     white-space: pre-wrap
 }
 
-.ui .messages li .message:before {
-    content: '';
-    position: absolute;
-    width: 0px;
-    height: 0px;
-    top: -12px;
-    border-bottom: 12px solid #62bf6e;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
+.ui .messages li .message:after {
+
+}
+
+.ui .messages li.message-unconfirmed {
+    opacity: 0.4;
 }
 
 .ui .messages li.message-friend .name {
@@ -296,13 +305,13 @@ body {
 }
 
 .ui .messages li.message-local .message {
-    background-color: #7bc4ef;
+    background-color: #00b0ff;
     float: right;
 }
 
 .ui .messages li.message-local .message:before {
-    right: 16px;
-    border-bottom-color: #7bc4ef;
+    /*right: 16px;*/
+    /*border-bottom-color: #7bc4ef;*/
 }
 
 .ui .write-form {
@@ -320,7 +329,7 @@ body {
     resize: none;
 }
 
-.ui .write-form textarea:before {
+.ui .write-form .new-message-area:before {
     content: '';
     clear: both;
 }

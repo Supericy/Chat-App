@@ -26,11 +26,12 @@
 <body>
 
 <div id="login">
-    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true" style="display: none;">
         <div class="modal-dialog">
             <div class="loginmodal-container">
                 <h1>Login to Your Account</h1><br>
-                <form data-bind="submit: login">
+                <form action="#" data-bind="submit: login">
                     <input type="text" placeholder="Name" data-bind="textInput: name">
                     <input type="password" placeholder="Password" data-bind="textInput: password">
                     <input type="submit" class="login loginmodal-submit" value="Login"
@@ -39,36 +40,35 @@
 
                 <div style="text-align: center; color: orangered" data-bind="text: error()">
                 </div>
-<!---->
-<!--                <div class="login-help">-->
-<!--                    <a href="#">Register</a> - <a href="#">Forgot Password</a>-->
-<!--                </div>-->
+                <!---->
+                <!--                <div class="login-help">-->
+                <!--                    <a href="#">Register</a> - <a href="#">Forgot Password</a>-->
+                <!--                </div>-->
             </div>
         </div>
     </div>
 </div>
 
-
-<div id="chat" class="ui" style="display: none;" data-bind="visible: true">
-    <div class="left-menu">
+<div class="ui">
+    <div id="channels" class="left-menu" style="display: none;" data-bind="visible: true">
         <div class="left-menu-header">
             Channels
         </div>
         <form action="#" class="input-group search">
             <input type="text" class="" placeholder="Search channels..."/>
         </form>
-        <menu class="left-menu-body list-friends list-channels">
+        <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
             <li>
                 <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
                 <div class="info">
-                    <div class="user">General</div>
+                    <div class="user" data-bind="text: name"></div>
                     <div class="status on"> online</div>
                 </div>
             </li>
         </menu>
     </div>
 
-    <div class="chat">
+    <div id="chat" class="chat" style="display: none;" data-bind="visible: true">
         <div class="top">
             <div class="avatar">
                 <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
@@ -85,7 +85,7 @@
             <i class="fa fa-star"></i>
         </div>
         <ul class="messages" data-bind="foreach: messages()">
-            <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
+            <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal(), 'message-unconfirmed': !isMessageConfirmed() }">
                 <div class="head">
                     <span class="time" data-bind="text: moment(timestamp()).format('LLL')"></span>
                     <span class="name" data-bind="text: name()"></span>
@@ -93,8 +93,14 @@
                 <div class="message" data-bind="text: message()"></div>
             </li>
         </ul>
+
+        <div class="is-typing" data-bind="foreach: typing()">
+            <span data-bind="text: name">X</span> is typing...
+        </div>
+
         <form action="#" id="new-message-form" class="write-form" data-bind="submit: send">
-            <textarea class="new-message-area" placeholder="Type your message" name="e" rows="2" maxlength="256"
+            <textarea class="new-message-area" placeholder="Type your message" name="e" rows="2"
+                      maxlength="256"
                       data-bind="textInput: newMessage"></textarea>
             <i class="fa fa-picture-o"></i>
             <i class="fa fa-file-o"></i>
@@ -103,14 +109,14 @@
         </form>
     </div>
 
-    <div class="left-menu">
+    <div id="users" class="left-menu" style="display: none;" data-bind="visible: true">
         <div class="left-menu-header">
             Users
         </div>
         <form action="#" class="input-group search">
-            <input type="text" class="" placeholder="Search users..."/>
+            <input type="text" class="" placeholder="Search users..." data-bind="textInput: searchQuery"/>
         </form>
-        <menu class="left-menu-body list-friends" data-bind="foreach: users()">
+        <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
             <li>
                 <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
                 <div class="info">

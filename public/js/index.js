@@ -95,18 +95,20 @@
         ]);
         this.typing = ko.observableArray();
 
-        this.confirmMessage = function (confimedMessage) {
+        this.confirmMessage = function (confirmedMessage) {
             var returnMessageVM = undefined;
 
             this.messages().some(function (messageVM) {
-                returnMessageVM = messageVM;
-
-                if (!messageVM.isMessageConfirmed() && messageVM.message() === confimedMessage) {
-                    messageVM.setMessageConfirmed(true);
-                    return true;
-                }
-
-                return false;
+                //returnMessageVM = messageVM;
+                //
+                ////if (!messageVM.isMessageConfirmed() && messageVM.message() === confimedMessage) {
+                //if (messageVM.confirmMessage(confirmedMessage)) {
+                //    messageVM.setMessageConfirmed(true);
+                //    return true;
+                //}
+                //
+                //return false;
+                return messageVM.confirmMessage(confirmedMessage);
             });
 
             return returnMessageVM;
@@ -121,8 +123,15 @@
         };
 
         this.pushMessage = function (name, message, timestamp, confirmed) {
-            var messageVM = new MessageViewModel(currentUser, name, message, timestamp, confirmed);
-            this.messages.push(messageVM);
+            var messageVM = self.messages()[self.messages().length - 1];
+
+            if (messageVM.name() === name) {
+                //messageVM.message(messageVM.message() + '\n' + message);
+                messageVM.attachMessage(message, confirmed);
+            } else {
+                messageVM = new MessageViewModel(currentUser, name, message, timestamp, confirmed);
+                this.messages.push(messageVM);
+            }
 
             resizeAndScrollMessages();
 
@@ -130,6 +139,10 @@
         };
 
         this.send = function () {
+            if (self.newMessage().length < 1) {
+                return;
+            }
+
             $.ajax({
                     type: "POST",
                     url: '/api/v1/chat/send',
@@ -203,12 +216,10 @@
         });
     };
 
-    var MessageViewModel = function (currentUser, name, message, timestamp, confirmed) {
+    var MessageBlock = function (text, confirmed) {
         var self = this;
 
-        this.timestamp = ko.observable(timestamp);
-        this.name = ko.observable(name);
-        this.message = ko.observable(message);
+        this.text = ko.observable(text);
         this.confirmed = ko.observable(confirmed ? "1" : "0");
 
         this.setMessageConfirmed = function (bool) {
@@ -218,6 +229,31 @@
         this.isMessageConfirmed = ko.computed(function () {
             return self.confirmed() === "1";
         });
+    };
+
+    var MessageViewModel = function (currentUser, name, text, timestamp, confirmed) {
+        var self = this;
+
+        this.timestamp = ko.observable(timestamp);
+        this.name = ko.observable(name);
+        this.messageBlocks = ko.observableArray([
+            new MessageBlock(text, confirmed)
+        ]);
+
+        this.confirmMessage = function (confirmedMessage) {
+            this.messageBlocks().some(function (block) {
+                if (!block.isMessageConfirmed() && block.text() === confirmedMessage) {
+                    block.setMessageConfirmed(true);
+                    return true;
+                }
+
+                return false;
+            });
+        };
+
+        this.attachMessage = function (text, confirmed) {
+            this.messageBlocks.push(new MessageBlock(text, confirmed));
+        };
 
         this.isMessageLocal = ko.computed(function () {
             return name === currentUser.name;

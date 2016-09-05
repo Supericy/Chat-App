@@ -85,12 +85,14 @@
             <i class="fa fa-star"></i>
         </div>
         <ul class="messages" data-bind="foreach: messages()">
-            <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal(), 'message-unconfirmed': !isMessageConfirmed() }">
+            <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
                 <div class="head">
                     <span class="time" data-bind="text: moment(timestamp()).format('LLL')"></span>
                     <span class="name" data-bind="text: name()"></span>
                 </div>
-                <div class="message" data-bind="text: message()"></div>
+                <div class="message" data-bind="foreach: messageBlocks()">
+                    <div data-bind="css: {'message-unconfirmed': !isMessageConfirmed()}, text: text()"></div>
+                </div>
             </li>
         </ul>
 

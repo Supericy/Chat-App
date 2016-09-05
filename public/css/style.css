@@ -259,14 +259,9 @@ body {
     max-width: 500px;
     word-wrap: break-word;
     position: relative;
-    white-space: pre-wrap
 }
 
-.ui .messages li .message:after {
-
-}
-
-.ui .messages li.message-unconfirmed {
+.ui .messages li .message-unconfirmed {
     opacity: 0.4;
 }
 

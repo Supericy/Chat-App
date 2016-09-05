@@ -94,3 +94,7 @@
 .login-help{
     font-size: 12px;
 }
+
+.loginmodal-authenticating {
+    opacity: 0.4;
+}

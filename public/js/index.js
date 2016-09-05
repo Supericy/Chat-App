@@ -10,9 +10,12 @@
         };
     };
 
-    var App = {
-        init: function (currentUser) {
-            var pusher = new Pusher('944b0bdac25cd6df507f', {
+    var App = function () {
+        var self = this;
+
+        this.init = function (currentUser) {
+            self.user = currentUser;
+            self.pusher = new Pusher('944b0bdac25cd6df507f', {
                 authEndpoint: '/api/v1/pusher/auth',
                 auth: {
                     headers: {
@@ -22,13 +25,43 @@
                 encrypted: true
             });
 
-            var channel = pusher.subscribe('presence-general');
+            var channel = self.pusher.subscribe('presence-general');
 
             //ko.applyBindings(function () {}, $('#ko-container')[0]);
             ko.applyBindings(new ChannelListViewModel(channel), $('#channels')[0]);
             ko.applyBindings(new ChatViewModel(channel, currentUser), $('#chat')[0]);
             ko.applyBindings(new UserListViewModel(channel), $('#users')[0]);
+        };
+
+        this.initAuth = function () {
+            var authModal = new AuthModal();
+            authModal.show();
+
+            ko.applyBindings(new LoginViewModel(function (user) {
+                authModal.hide();
+                self.init(user);
+
+            }), $('#login')[0]);
         }
+    };
+
+    var AuthModal = function () {
+        var $login = $('#login');
+        var $modal = $('#login-modal');
+
+        this.show = function () {
+            $modal.modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        };
+
+        this.hide = function () {
+            $modal.modal('hide');
+            $modal.on('hidden.bs.modal', function () {
+                $login.remove();
+            });
+        };
     };
 
     var resizeAndScrollMessages = function () {
@@ -89,6 +122,7 @@
     var ChatViewModel = function (channel, currentUser) {
         var self = this;
 
+        this.user = ko.observable(currentUser);
         this.newMessage = ko.observable("");
         this.messages = ko.observableArray([
             new MessageViewModel(currentUser, currentUser.name, "Test Message (ignore)", Date.now(), true)
@@ -260,14 +294,17 @@
         });
     };
 
-    var LoginViewModel = function () {
+    var LoginViewModel = function (onAuthSuccess) {
         var self = this;
 
         this.name = ko.observable("");
         this.password = ko.observable("");
         this.error = ko.observable("");
+        this.authenticating = ko.observable("0");
 
         this.login = function () {
+            self.setAuthenticating(true);
+
             $.ajax({
                 type: "POST",
                 url: '/api/v1/user/auth',
@@ -280,23 +317,28 @@
                 .done(function(currentUser) {
                     console.log('Login Success', currentUser);
 
-                    var $login = $('#login');
-                    var $modal = $('#login-modal');
-
-                    $modal.modal('hide');
-                    $modal.on('hidden.bs.modal', function () {
-                        $login.remove();
-                    });
-
-                    App.init(currentUser);
+                    onAuthSuccess(currentUser);
                 })
                 .fail(function(data) {
                     var error = data.responseJSON.error;
 
                     console.log('error', error);
+
                     self.error(error.message);
+                })
+                .always(function (data) {
+                    self.setAuthenticating(false);
                 });
         };
+
+        this.setAuthenticating = function (bool) {
+            console.log('Authenticating', bool);
+            self.authenticating(bool ? "1" : "0");
+        };
+
+        this.isAuthenticating = ko.computed(function () {
+            return self.authenticating() === "1";
+        });
     };
 
     $(function () {
@@ -322,14 +364,11 @@
             }
         });
 
-        $('#login-modal').modal({
-            backdrop: 'static',
-            keyboard: false
-        });
 
-        ko.applyBindings(new LoginViewModel(), $('#login')[0]);
+        var app = new App();
+        app.initAuth();
 
-        //App.init({
+        //app.init({
         //    id: 3,
         //    name: 'Chad',
         //    api_token: 'yXwSG6DbNCzPhQ=='

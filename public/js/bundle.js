@@ -115,7 +115,8 @@
         var self = this;
 
         this.channels = ko.observableArray([
-            {name: 'General'}
+            {name: 'General'},
+            {name: 'Test Channel'}
         ]);
     };
 

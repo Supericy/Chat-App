@@ -53,42 +53,48 @@
 
 <div class="ui">
 
-    <div id="channels" class="left-menu" style="display: none;" data-bind="visible: true">
-        <div class="left-menu-header">
-            Channels
-        </div>
-        <form action="#" class="input-group search">
-            <input type="text" class="" placeholder="Search channels..."/>
-        </form>
-        <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
-            <li>
-                <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
-                <div class="info">
-                    <div class="user" data-bind="text: name"></div>
-                    <div class="status on"> online</div>
-                </div>
-            </li>
-        </menu>
+    <div class="left-menu">
+        <div id="channels" style="display: none;" data-bind="visible: true">
+            <div class="left-menu-header">
+                CHANNELS
+                <form action="#" class="input-group search">
+                    <input type="text" placeholder="search..."/>
+                </form>
+            </div>
 
+            <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
+                <li>
+                    <img width="50" height="50" src="images/no-user-image.gif">
+                    <div class="info">
+                        <div class="user" data-bind="text: name"></div>
+                        <div class="status on"> 13 users</div>
+                    </div>
+                </li>
+            </menu>
+        </div>
+
+        <div id="users" style="display: none;" data-bind="visible: true">
+            <div class="left-menu-header">
+                USERS
+                <form action="#" class="input-group search" data-bind="textInput: searchQuery">
+                    <input type="text" placeholder="search..."/>
+                </form>
+            </div>
+
+            <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
+                <li>
+                    <img width="50" height="50" src="images/no-user-image.gif">
+                    <div class="info">
+                        <div class="user" data-bind="text: name"></div>
+                        <div class="status on"> online</div>
+                    </div>
+                </li>
+            </menu>
+        </div>
     </div>
 
-    <div id="users" class="left-menu" style="display: none;" data-bind="visible: true">
-        <div class="left-menu-header">
-            Users
-        </div>
-        <form action="#" class="input-group search">
-            <input type="text" class="" placeholder="Search users..." data-bind="textInput: searchQuery"/>
-        </form>
-        <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
-            <li>
-                <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
-                <div class="info">
-                    <div class="user" data-bind="text: name"></div>
-                    <div class="status on"> online</div>
-                </div>
-            </li>
-        </menu>
-    </div>
+
+
 
     <div id="chat" class="chat" style="display: none;" data-bind="visible: true">
         <div class="top">

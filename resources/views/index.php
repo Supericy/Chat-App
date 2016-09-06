@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/login-modal.css">
 
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/URI.min.js"
+            integrity="sha256-MSgvqdgX/cpMre+9Q4RtcoaoCOHBzS/4kR6j3K+7Qp4=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"
             integrity="sha256-ly8TiTtwVsBWdjekTqTJlLGz3Rsg4YXr80eK6QhtdMs=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"
@@ -34,7 +36,8 @@
                 <form action="#" data-bind="submit: login">
                     <input type="text" placeholder="Name" data-bind="textInput: name">
                     <input type="password" placeholder="Password" data-bind="textInput: password">
-                    <input type="submit" class="login loginmodal-submit" value="Login" data-bind="disable: isAuthenticating()">
+                    <input type="submit" class="login loginmodal-submit" value="Login"
+                           data-bind="disable: isAuthenticating()">
                 </form>
 
                 <div style="text-align: center; color: orangered" data-bind="text: error()">
@@ -49,6 +52,7 @@
 </div>
 
 <div class="ui">
+
     <div id="channels" class="left-menu" style="display: none;" data-bind="visible: true">
         <div class="left-menu-header">
             Channels
@@ -57,6 +61,25 @@
             <input type="text" class="" placeholder="Search channels..."/>
         </form>
         <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
+            <li>
+                <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
+                <div class="info">
+                    <div class="user" data-bind="text: name"></div>
+                    <div class="status on"> online</div>
+                </div>
+            </li>
+        </menu>
+
+    </div>
+
+    <div id="users" class="left-menu" style="display: none;" data-bind="visible: true">
+        <div class="left-menu-header">
+            Users
+        </div>
+        <form action="#" class="input-group search">
+            <input type="text" class="" placeholder="Search users..." data-bind="textInput: searchQuery"/>
+        </form>
+        <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
             <li>
                 <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
                 <div class="info">
@@ -74,7 +97,7 @@
             </div>
             <div class="info">
                 <div class="name" data-bind="text: user().name">Your Name</div>
-<!--                <div class="count">already 1 902 messages</div>-->
+                <!--                <div class="count">already 1 902 messages</div>-->
             </div>
             <div style="display: inline-block; float: right;">
                 <button id="send-test-general" data-bind="click: function () {$.get('/broadcast');}">Send Server Message
@@ -108,26 +131,10 @@
         </form>
     </div>
 
-    <div id="users" class="left-menu" style="display: none;" data-bind="visible: true">
-        <div class="left-menu-header">
-            Users
-        </div>
-        <form action="#" class="input-group search">
-            <input type="text" class="" placeholder="Search users..." data-bind="textInput: searchQuery"/>
-        </form>
-        <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
-            <li>
-                <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
-                <div class="info">
-                    <div class="user" data-bind="text: name"></div>
-                    <div class="status on"> online</div>
-                </div>
-            </li>
-        </menu>
-    </div>
+
 </div>
 
-<script src="/js/index.js"></script>
+<script src="/js/bundle.js"></script>
 
 </body>
 </html>

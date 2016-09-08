@@ -11,6 +11,10 @@
 |
 */
 
+use App\Chat\Model\Channel;
+use App\Chat\Model\User;
+use App\Chat\Model\Message;
+
 $app->get('/', function () use ($app) {
     return view('index');
 });
@@ -24,16 +28,27 @@ $app->group(['prefix' => '/api/v1'], function () use ($app) {
 //    $app->get ('/user/{id}', 'App\Http\Controllers\UserController@retrieve');
 
     $app->post('/chat/send', 'App\Http\Controllers\ChatController@sendMessage');
+    $app->get('/chat/history', 'App\Http\Controllers\ChatController@history');
 });
 
 
 
 $app->get('/broadcast', function() use ($app) {
+    $pusher = app()->make('Pusher');
+    $channel = Channel::find(1);
+    $user = User::find(6); // Server user
 
-    $app->make('Pusher')->trigger('presence-general', 'message-new', [
-        'name' => 'Server',
-        'timestamp' => time(),
-        'message' => 'Hello!'
+    $message = new Message([
+        'text' => 'Hello!'
+    ]);
+
+    $message->user()->associate($user);
+    $message->channel()->associate($channel);
+
+    $message->save();
+
+    $pusher->trigger('presence-general', 'message-new', [
+        'message' => $message->toArray()
     ]);
 
     return 'done2';

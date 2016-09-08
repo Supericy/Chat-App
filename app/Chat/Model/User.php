@@ -1,12 +1,13 @@
 <?php
 
-namespace App;
+namespace App\Chat\Model;
 
 use Illuminate\Auth\Authenticatable;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use App\Chat\Model\Message;
 
 class User extends Model implements
     AuthenticatableContract,
@@ -38,18 +39,25 @@ class User extends Model implements
 
     public function toArrayPublic()
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->name
-        ];
+        return $this->toArray();
+//        return [
+//            'id' => $this->id,
+//            'name' => $this->name,
+//            'created_at' => $this->created_at
+//        ];
     }
 
     public function toArrayPrivate()
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
+        $private = [
             'api_token' => $this->api_token
         ];
+
+        return array_merge($this->toArrayPublic(), $private);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany('App\Chat\Model\Message');
     }
 }

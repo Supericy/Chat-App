@@ -11,6 +11,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-         $this->call('UserTableSeeder');
+        // Seed Users
+        User::create([
+            'name' => 'Chad Kosie',
+            'password' => 'lol123'
+        ]);
+
+        Channel::create([
+            'name' => 'General'
+        ]);
     }
 }

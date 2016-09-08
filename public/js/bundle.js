@@ -20,6 +20,21 @@
             .doScrollTop(999999, 999);
     };
 
+    var User = function (parameters) {
+        this.id = parameters.id;
+        this.name = parameters.name;
+        this.created_at = parameters.created_at;
+        this.api_token = parameters.api_token;
+    };
+
+    var Message = function (parameters, confirmed) {
+        this.id = parameters.id;
+        this.user_id = parameters.user_id;
+        this.text = parameters.text;
+        this.created_at = parameters.created_at;
+        this.confirmed = confirmed || false;
+    };
+
     var App = function () {
         var self = this;
 
@@ -126,7 +141,12 @@
         this.user = ko.observable(currentUser);
         this.newMessage = ko.observable("");
         this.messages = ko.observableArray([
-            new MessageViewModel(currentUser, currentUser.name, "Test Message (ignore)", Date.now(), true)
+            new MessageViewModel(currentUser, currentUser, new Message({
+                id: -1,
+                user_id: currentUser.id,
+                text: 'Test Message (ignore)',
+                created_at: Date.now()
+            }), true)
         ]);
         this.typing = ko.observableArray();
 
@@ -142,22 +162,22 @@
             return returnMessageVM;
         };
 
-        this.receive = function (name, message, timestamp) {
-            if (currentUser.name === name) {
+        this.receive = function (user, message) {
+            // FIXME: compare id instead?
+            if (currentUser.name === user.name) {
                 return this.confirmMessage(message);
             } else {
-                return this.pushMessage(name, message, timestamp, true);
+                return this.pushMessage(user, message, true);
             }
         };
 
-        this.pushMessage = function (name, message, timestamp, confirmed) {
+        this.pushMessage = function (user, message, confirmed) {
             var messageVM = self.messages()[self.messages().length - 1];
 
-            if (messageVM.name() === name) {
-                //messageVM.message(messageVM.message() + '\n' + message);
+            if (messageVM.name() === user.name) {
                 messageVM.attachMessage(message, confirmed);
             } else {
-                messageVM = new MessageViewModel(currentUser, name, message, timestamp, confirmed);
+                messageVM = new MessageViewModel(currentUser, user, message, confirmed);
                 this.messages.push(messageVM);
             }
 
@@ -178,12 +198,12 @@
                         'Authorization': 'API-TOKEN ' + currentUser.api_token
                     },
                     data: {
-                        message: self.newMessage()
+                        text: self.newMessage()
                     },
                     dataType: 'json'
                 })
                 .done(function(data) {
-                    console.log(data);
+                    //console.log('Send Response', data);
                 })
                 .fail(function(data) {
                     console.log('Send Failed', data);
@@ -199,9 +219,50 @@
 
                 });
 
-            self.pushMessage(currentUser.name, self.newMessage(), Date.now(), false);
+            //self.pushMessage(currentUser.name, self.newMessage(), Date.now(), false);
+            self.pushMessage(currentUser, new Message({
+                id: -1,
+                user_id: currentUser.id,
+                text: self.newMessage(),
+                created_at: Date.now()
+            }), false);
             self.newMessage("");
         };
+
+        $.ajax({
+                type: "GET",
+                url: '/api/v1/chat/history',
+                headers: {
+                    'Authorization': 'API-TOKEN ' + currentUser.api_token
+                },
+                data: {
+                    channel: channel.name
+                },
+                dataType: 'json'
+            })
+            .done(function(response) {
+                console.log('Channel History', response);
+
+                response.data.messages.forEach(function (v) {
+                    var user = new User(v.user);
+                    var message = new Message(v, true);
+
+                    self.pushMessage(user, message, true);
+                });
+            })
+            .fail(function(data) {
+                console.log('Send Failed', data);
+                var error = data.responseJSON.error;
+
+                console.log('error', error);
+                //self.error(error.message);
+                alert(error.message);
+
+                // TODO: remove message that was appended locally
+            })
+            .always(function () {
+
+            });
 
         var t;
         this.newMessage.subscribe(function (value) {
@@ -216,7 +277,12 @@
         });
 
         channel.bind('message-new', function (data) {
-            self.receive(data.name, data.message, data.timestamp * 1000);
+            console.log('New Message Received', data);
+            var user = new User(data.message.user);
+            var message = new Message(data.message, true);
+
+            //self.receive(data.name, data.message, data.timestamp * 1000);
+            self.receive(user, message);
         });
         channel.bind('client-started-typing', function (data) {
             console.log('Started Typing', data);
@@ -259,18 +325,20 @@
         });
     };
 
-    var MessageViewModel = function (currentUser, name, text, timestamp, confirmed) {
+    var MessageViewModel = function (currentUser, user, message, confirmed) {
         var self = this;
 
-        this.timestamp = ko.observable(timestamp);
-        this.name = ko.observable(name);
+        //console.log('New MessageViewModel', user, message);
+
+        this.timestamp = ko.observable(message.created_at);
+        this.name = ko.observable(user.name);
         this.messageBlocks = ko.observableArray([
-            new MessageBlock(text, confirmed)
+            new MessageBlock(message.text, confirmed)
         ]);
 
         this.confirmMessage = function (confirmedMessage) {
             this.messageBlocks().some(function (block) {
-                if (!block.isMessageConfirmed() && block.text() === confirmedMessage) {
+                if (!block.isMessageConfirmed() && block.text() === confirmedMessage.text) {
                     block.setMessageConfirmed(true);
                     return true;
                 }
@@ -279,12 +347,12 @@
             });
         };
 
-        this.attachMessage = function (text, confirmed) {
-            this.messageBlocks.push(new MessageBlock(text, confirmed));
+        this.attachMessage = function (message, confirmed) {
+            this.messageBlocks.push(new MessageBlock(message.text, confirmed));
         };
 
         this.isMessageLocal = ko.computed(function () {
-            return name === currentUser.name;
+            return user.name === currentUser.name;
         });
     };
 

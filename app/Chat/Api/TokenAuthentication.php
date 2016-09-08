@@ -9,7 +9,7 @@
 namespace App\Chat\Api;
 
 
-use App\User;
+use App\Chat\Model\User;
 use Illuminate\Contracts\Validation\UnauthorizedException;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;

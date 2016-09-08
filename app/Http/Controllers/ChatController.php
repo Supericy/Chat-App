@@ -8,7 +8,8 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
+use App\Chat\Model\Channel;
+use App\Chat\Model\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,25 +20,48 @@ class ChatController extends Controller
         $this->middleware('auth');
     }
 
+    public function history(Request $request)
+    {
+        // TODO: make channel controller
+        $channel = Channel::find(1);
+
+        $messages = $channel->messages()->with('User', 'Channel')->get();
+
+        return [
+            'code' => 200,
+            'status' => 'OK',
+            'data' => [
+                'messages' => $messages->toArray()
+            ]
+        ];
+    }
+
     public function sendMessage(Request $request)
     {
         $this->validate($request, [
-            'message' => 'required|max:256'
+            'text' => 'required|max:256'
         ]);
 
         $pusher = app()->make('Pusher');
+        $channel = Channel::find(1);
         $user = Auth::user();
 
+        $message = new Message([
+            'text' => $request->input('text')
+        ]);
+
+        $message->user()->associate($user);
+        $message->channel()->associate($channel);
+
+        $message->save();
+
         $pusher->trigger('presence-general', 'message-new', [
-            'id' => $user->id,
-            'name' => $user->name,
-            'timestamp' => time(),
-            'message' => $request->input('message')
+            'message' => $message->toArray()
         ]);
 
         return [
             'code' => 200,
-            'message' => 'sent'
+            'status' => 'OK'
         ];
     }
 }

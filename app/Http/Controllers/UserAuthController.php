@@ -8,9 +8,8 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
+use App\Chat\Model\User;
 use Illuminate\Contracts\Hashing\Hasher;
-use Illuminate\Contracts\Validation\UnauthorizedException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 

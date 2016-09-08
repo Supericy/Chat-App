@@ -8,10 +8,9 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
+use App\Chat\Model\User;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class CreateUserController extends Controller
 {

@@ -4,10 +4,8 @@ namespace App\Providers;
 
 use App\Chat\Api\AuthorizationHeader;
 use App\Chat\Api\TokenAuthentication;
-use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider

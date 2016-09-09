@@ -21,7 +21,8 @@ class Channel extends Model
      * @var array
      */
     protected $fillable = [
-        'name'
+        'name',
+        'display_name'
     ];
 
     /**
@@ -30,7 +31,7 @@ class Channel extends Model
      * @var array
      */
     protected $hidden = [
-
+        'password'
     ];
 
     public function messages()

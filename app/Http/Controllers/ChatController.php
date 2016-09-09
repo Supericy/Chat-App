@@ -20,22 +20,6 @@ class ChatController extends Controller
         $this->middleware('auth');
     }
 
-    public function history(Request $request)
-    {
-        // TODO: make channel controller
-        $channel = Channel::find(1);
-
-        $messages = $channel->messages()->with('User', 'Channel')->get();
-
-        return [
-            'code' => 200,
-            'status' => 'OK',
-            'data' => [
-                'messages' => $messages->toArray()
-            ]
-        ];
-    }
-
     public function sendMessage(Request $request)
     {
         $this->validate($request, [

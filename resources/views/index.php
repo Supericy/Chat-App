@@ -113,7 +113,7 @@
         <ul class="messages" data-bind="foreach: messages()">
             <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
                 <div class="head">
-                    <span class="time" data-bind="text: moment(timestamp()).format('LLL')"></span>
+                    <span class="time" data-bind="text: moment.utc(timestamp()).local().format('LLL')"></span>
                     <span class="name" data-bind="text: name()"></span>
                 </div>
                 <div class="message" data-bind="foreach: messageBlocks()">

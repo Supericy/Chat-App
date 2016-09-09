@@ -50,12 +50,12 @@
                 encrypted: true
             });
 
-            var channel = self.pusher.subscribe('presence-general');
+            var pChannel = self.pusher.subscribe('presence-general');
 
             //ko.applyBindings(function () {}, $('#ko-container')[0]);
-            ko.applyBindings(new ChannelListViewModel(channel), $('#channels')[0]);
-            ko.applyBindings(new ChatViewModel(channel, currentUser), $('#chat')[0]);
-            ko.applyBindings(new UserListViewModel(channel), $('#users')[0]);
+            ko.applyBindings(new ChannelListViewModel(pChannel), $('#channels')[0]);
+            ko.applyBindings(new ChatViewModel(pChannel, currentUser), $('#chat')[0]);
+            ko.applyBindings(new UserListViewModel(pChannel), $('#users')[0]);
         };
 
         this.initAuth = function () {
@@ -89,7 +89,7 @@
         };
     };
 
-    var UserListViewModel = function (channel) {
+    var UserListViewModel = function (pChannel) {
         var self = this;
 
         this.searchQuery = ko.observable("");
@@ -113,20 +113,20 @@
             self.users.remove(user);
         };
 
-        channel.bind('pusher:subscription_succeeded', function (status) {
+        pChannel.bind('pusher:subscription_succeeded', function (status) {
             channel.members.each(function (data) {
                 self.addUser(data.info);
             });
         });
-        channel.bind('pusher:member_added', function (data) {
+        pChannel.bind('pusher:member_added', function (data) {
             self.addUser(data.info);
         });
-        channel.bind('pusher:member_removed', function (data) {
+        pChannel.bind('pusher:member_removed', function (data) {
             self.removeUser(data.info);
         });
     };
 
-    var ChannelListViewModel = function (channel) {
+    var ChannelListViewModel = function (pChannel) {
         var self = this;
 
         this.channels = ko.observableArray([
@@ -135,7 +135,7 @@
         ]);
     };
 
-    var ChatViewModel = function (channel, currentUser) {
+    var ChatViewModel = function (pChannel, currentUser) {
         var self = this;
 
         this.user = ko.observable(currentUser);
@@ -231,12 +231,9 @@
 
         $.ajax({
                 type: "GET",
-                url: '/api/v1/chat/history',
+                url: '/api/v1/channel/1/history',
                 headers: {
                     'Authorization': 'API-TOKEN ' + currentUser.api_token
-                },
-                data: {
-                    channel: channel.name
                 },
                 dataType: 'json'
             })
@@ -269,22 +266,21 @@
             clearTimeout(t);
             t = setTimeout(function () {
                 if (value.length > 0) {
-                    channel.trigger('client-started-typing', publicifyUser(currentUser));
+                    pChannel.trigger('client-started-typing', publicifyUser(currentUser));
                 } else {
-                    channel.trigger('client-stopped-typing', publicifyUser(currentUser));
+                    pChannel.trigger('client-stopped-typing', publicifyUser(currentUser));
                 }
             }, 500);
         });
 
-        channel.bind('message-new', function (data) {
+        pChannel.bind('message-new', function (data) {
             console.log('New Message Received', data);
             var user = new User(data.message.user);
             var message = new Message(data.message, true);
 
-            //self.receive(data.name, data.message, data.timestamp * 1000);
             self.receive(user, message);
         });
-        channel.bind('client-started-typing', function (data) {
+        pChannel.bind('client-started-typing', function (data) {
             console.log('Started Typing', data);
 
             var found = false;
@@ -297,13 +293,13 @@
                 self.typing.push(data);
             }
         });
-        channel.bind('client-stopped-typing', function (data) {
+        pChannel.bind('client-stopped-typing', function (data) {
             console.log('Stopped Typing', data);
             self.typing.remove(function (item) {
                 return item.id === data.id;
             });
         });
-        channel.bind('pusher:member_removed', function (data) {
+        pChannel.bind('pusher:member_removed', function (data) {
             self.typing.remove(function (item) {
                 return item.id === data.info.id;
             });

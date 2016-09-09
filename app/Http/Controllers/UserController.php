@@ -11,8 +11,9 @@ namespace App\Http\Controllers;
 use App\Chat\Model\User;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-class CreateUserController extends Controller
+class UserController extends Controller
 {
     /**
      * @var Hasher
@@ -22,6 +23,25 @@ class CreateUserController extends Controller
     public function __construct(Hasher $hasher)
     {
         $this->hasher = $hasher;
+    }
+
+    public function authenticate(Request $request)
+    {
+        $this->validate($request, [
+            'name' => 'required|max:32',
+            'password' => 'required'
+        ]);
+
+        $name = $request->input('name');
+        $password = $request->input('password');
+
+        $user = User::where('name', $name)->first();
+
+        if (!$user || !$this->hasher->check($password, $user->password)) {
+            throw new UnauthorizedHttpException('', 'Invalid name or password.');
+        }
+
+        return $user->toArrayPrivate();
     }
 
     public function create(Request $request)

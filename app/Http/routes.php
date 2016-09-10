@@ -28,10 +28,11 @@ $app->group(['prefix' => '/api/v1'], function () use ($app) {
     $app->post('/chat/send', 'App\Http\Controllers\ChatController@sendMessage');
     $app->get('/chat/history', 'App\Http\Controllers\ChatController@history');
 
-    $app->get('/channels', '');
+    $app->get('/channels', 'App\Http\Controllers\ChannelController@getAll');
     $app->post('/channel', 'App\Http\Controllers\ChannelController@create');
     $app->get('/channel/{id}', 'App\Http\Controllers\ChannelController@get');
     $app->get('/channel/{id}/history', 'App\Http\Controllers\ChannelController@history');
+    $app->post('/channel/{id}/send-message', 'App\Http\Controllers\ChannelController@sendMessage');
 });
 
 
@@ -50,7 +51,7 @@ $app->get('/broadcast', function() use ($app) {
 
     $message->save();
 
-    $pusher->trigger('presence-general', 'message-new', [
+    $pusher->trigger('presence-general', 'new-message', [
         'message' => $message->toArray()
     ]);
 

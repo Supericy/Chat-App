@@ -10,18 +10,12 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/login-modal.css">
 
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/URI.min.js"
-            integrity="sha256-MSgvqdgX/cpMre+9Q4RtcoaoCOHBzS/4kR6j3K+7Qp4=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"
-            integrity="sha256-ly8TiTtwVsBWdjekTqTJlLGz3Rsg4YXr80eK6QhtdMs=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"
-            integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://js.pusher.com/3.2/pusher.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"
-            integrity="sha256-De/cgZoAkgvqoxL9yJpJzPHyozUETFnSv7EQGfQWQ4o=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/URI.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://js.pusher.com/3.2/pusher.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
     <script src='http://cdnjs.cloudflare.com/ajax/libs/nicescroll/3.5.4/jquery.nicescroll.js'></script>
 
 </head>
@@ -63,10 +57,11 @@
             </div>
 
             <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
+<!--                <li data-bind="click: join">-->
                 <li>
                     <img width="50" height="50" src="images/no-user-image.gif">
                     <div class="info">
-                        <div class="user" data-bind="text: name"></div>
+                        <div class="user" data-bind="text: display_name"></div>
                         <div class="status on"> 13 users</div>
                     </div>
                 </li>
@@ -117,7 +112,7 @@
                     <span class="name" data-bind="text: name()"></span>
                 </div>
                 <div class="message" data-bind="foreach: messageBlocks()">
-                    <div data-bind="css: {'message-unconfirmed': !isMessageConfirmed()}, text: text()"></div>
+                    <div data-bind="css: {'message-unconfirmed': !confirmed()}, text: text()"></div>
                 </div>
             </li>
         </ul>

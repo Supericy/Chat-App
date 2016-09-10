@@ -148,6 +148,11 @@ body {
     height: 88%;
 }
 
+.ui .list-friends li:hover {
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+}
+
 .ui .list-friends img {
     margin: 5px;
 }

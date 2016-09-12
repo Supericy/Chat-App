@@ -20,18 +20,75 @@
   },
   "homepage": "https://github.com/Supericy/Chat-Backend#readme",
   "devDependencies": {
+    "amd-optimize": "^0.6.1",
     "babel-cli": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",
+    "babelify": "^7.3.0",
+    "browserify": "^13.1.0",
+    "browserify-shim": "^3.8.12",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-concat": "^2.6.0",
     "gulp-jshint": "^2.0.1",
+    "gulp-npm-files": "^0.1.3",
+    "gulp-rename": "^1.2.2",
+    "gulp-requirejs": "^0.1.3",
     "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.13.6",
+    "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "jshint": "^2.9.3",
-    "jshint-stylish": "^2.2.1"
+    "jshint-stylish": "^2.2.1",
+    "lodash.assign": "^4.2.0",
+    "tsify": "^1.0.6",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.7.0"
   },
   "dependencies": {
-    "pusher": "^1.5.0"
+    "bootstrap": "^3.3.7",
+    "gulp-clean": "^0.3.2",
+    "jquery": "^3.1.0",
+    "jquery.nicescroll": "^3.6.8",
+    "knockout": "^3.4.0",
+    "moment": "^2.14.1",
+    "pusher-js": "^3.2.1",
+    "urijs": "^1.18.1"
+  },
+  "browser": {
+    "jquery": "./node_modules/jquery/dist/jquery",
+    "jquery.nicescroll": "./node_modules/jquery.nicescroll/jquery.nicescroll",
+    "bootstrap": "./node_modules/bootstrap/dist/js/bootstrap",
+    "knockout": "./node_modules/knockout/build/output/knockout-latest.debug",
+    "pusher-js": "./node_modules/pusher-js/dist/web/pusher.js",
+    "moment": "./node_modules/moment/min/moment.min",
+    "urijs": "./node_modules/urijs/src/URI.min"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "jquery": {
+      "exports": "jQuery"
+    },
+    "pusher-js": {
+      "depends": [
+        "jquery:jQuery"
+      ]
+    },
+    "bootstrap": {
+      "exports": "bootstrap",
+      "depends": [
+        "jquery:jQuery"
+      ]
+    },
+    "knockout": {
+      "exports": "knockout",
+      "depends": [
+        "jquery:$"
+      ]
+    }
   }
 }

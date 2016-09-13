@@ -13,31 +13,39 @@ import {applyUserTypingHandler} from '../util';
 
 class ChatPaneViewModel {
     constructor(params) {
+        this.me = params.me;
         this.channel = params.channel;
         this.newMessage = ko.observable("");
         this.messages = ko.observableArray();
         this.typing = ko.observableArray();
-        //this.isUserTypingHandler = new IsUserTypingHandler(this.newMessage, this.typing, this.channel, this.channel.me);
-        applyUserTypingHandler(this.newMessage, this.typing, this.channel, this.channel.me);
+        applyUserTypingHandler(this);
 
         this.name = ko.computed(() => {
-            return this.channel.me.name;
-        });
-
-        this.channel.getHistory().then((messages) => {
-            messages.forEach((message) => {
-                this.pushMessage(message.user, message);
-            });
-        });
-
-        this.channel.onNewMessage((user, message) => {
-            // our own message, let's confirm it
-            if (this.channel.me.name === user.name) {
-                return this.confirmMessage(message);
+            if (!this.me()) {
+                return 'Unknown';
             }
 
-            // someone elses message, let's process it
-            return this.pushMessage(user, message);
+            return this.me().name;
+        });
+
+        this.channel.subscribe((channel) => {
+            this.messages([]);
+
+            channel.getHistory().then((messages) => {
+                messages.forEach((message) => {
+                    this.pushMessage(message.user, message);
+                });
+            });
+
+            channel.onNewMessage((user, message) => {
+                // our own message, let's confirm it
+                if (this.me().name === user.name) {
+                    return this.confirmMessage(message);
+                }
+
+                // someone elses message, let's process it
+                return this.pushMessage(user, message);
+            });
         });
     }
 
@@ -73,7 +81,7 @@ class ChatPaneViewModel {
     }
 
     pushMessage(user, message) {
-        var isMessageLocal = this.channel.me.name === user.name;
+        var isMessageLocal = this.me().name === user.name;
         var messageVM = this.previousMessageVM();
 
         if (messageVM !== null && messageVM.user.name === user.name) {
@@ -82,8 +90,6 @@ class ChatPaneViewModel {
             messageVM = new MessageViewModel(user, message, isMessageLocal);
             this.messages.push(messageVM);
         }
-
-        this.resizeAndScrollMessages();
 
         return messageVM;
     }
@@ -95,46 +101,10 @@ class ChatPaneViewModel {
             return;
         }
 
-        this.channel.sendMessage(text);
-        this.pushMessage(this.channel.me, Message.newLocalMessage(this.channel.me, text));
+        this.channel().sendMessage(text);
+        this.pushMessage(this.me(), Message.newLocalMessage(this.me(), text));
 
         this.newMessage("");
-    }
-
-    bindjQueryHandlers() {
-        $(".ui .new-message-area").keypress(function (e) {
-            if (e.keyCode === 13 && !e.shiftKey) {
-                $('#new-message-form').submit();
-                e.preventDefault();
-            }
-        });
-
-        $(".ui .list-friends").niceScroll({
-            autohidemode: false,
-            smoothscroll: false,
-            cursorcolor:  "#696c75",
-            cursorwidth:  "8px",
-            cursorborder: "none"
-        });
-
-        $(".messages").niceScroll({
-            autohidemode: false,
-            smoothscroll: false,
-            cursorcolor:  "#cdd2d6",
-            cursorwidth:  "8px",
-            cursorborder: "none"
-        });
-    }
-
-    resizeAndScrollMessages() {
-        let $messages = $('.messages');
-
-        $messages
-            .getNiceScroll(0)
-            .resize();
-        $messages
-            .getNiceScroll(0)
-            .doScrollTop(999999, 999);
     }
 }
 

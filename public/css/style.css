@@ -50,12 +50,12 @@ body {
     content: ", ";
 }
 
-#channels {
+.channels {
     height: 50%;
     border-bottom: solid black 2px;
 }
 
-#users {
+.users {
     height: 50%;
     border-top: solid rgba(255,255,255,0.4) 1px;
 }

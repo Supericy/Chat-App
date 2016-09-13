@@ -16,25 +16,40 @@ class UserListViewModel {
             });
         });
 
-        this.channel.onUserAdded((user) => {
-            this.add(user);
-        });
+        this.channel.subscribe((channel) => {
+            this.users([]);
 
-        this.channel.onUserRemoved((user) => {
-            this.remove(user);
+            channel.onUserAdded((user) => {
+                this.add(user);
+            });
+
+            channel.onUserRemoved((user) => {
+                this.remove(user);
+            });
         });
     }
 
     add(user) {
         console.log('Add User', user);
-        if (this.users().indexOf(user) < 0) {
+
+        let found = false;
+        this.users().forEach((item) => {
+            if (!found) {
+                found = item.id === user.id;
+            }
+        });
+
+        if (!found) {
             this.users.push(user);
         }
     }
 
     remove(user) {
         console.log('Remove User', user);
-        this.users.remove(user);
+
+        this.users.remove((item) => {
+            return item.id === user.id;
+        });
     }
 }
 

@@ -1,39 +1,41 @@
-<div class="top">
-    <div class="avatar">
-        <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
-    </div>
-    <div class="info">
-        <div class="name" data-bind="text: name()">Your Name</div>
-        <!--                <div class="count">already 1 902 messages</div>-->
-    </div>
-    <div style="display: inline-block; float: right;">
-        <button id="send-test-general" data-bind="click: serverBroadcast">Send Server Message
-        </button>
-    </div>
-</div>
-
-<ul class="messages" data-bind="foreach: {data: messages(), afterRender: bindjQueryHandlers}">
-    <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
-        <div class="head">
-            <span class="time" data-bind="text: timestamp()"></span>
-            <span class="name" data-bind="text: name()"></span>
+<div class="chat">
+    <div class="top">
+        <div class="avatar">
+            <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
         </div>
-        <div class="message" data-bind="foreach: messageBlocks()">
-            <div data-bind="css: {'message-unconfirmed': !confirmed()}, text: text()"></div>
+        <div class="info">
+            <div class="name" data-bind="text: name()">Your Name</div>
+            <!--                <div class="count">already 1 902 messages</div>-->
         </div>
-    </li>
-</ul>
+        <div style="display: inline-block; float: right;">
+            <button id="send-test-general" data-bind="click: serverBroadcast">Send Server Message
+            </button>
+        </div>
+    </div>
 
-<div class="is-typing" data-bind="foreach: typing()">
-    <span data-bind="text: name">X</span> is typing...
+    <ul class="messages" data-bind="niceScroll: {autoscroll: true}, foreach: messages()">
+        <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
+            <div class="head">
+                <span class="time" data-bind="text: timestamp()"></span>
+                <span class="name" data-bind="text: name()"></span>
+            </div>
+            <div class="message" data-bind="foreach: messageBlocks()">
+                <div data-bind="css: {'message-unconfirmed': !confirmed()}, text: text()"></div>
+            </div>
+        </li>
+    </ul>
+
+    <div class="is-typing" data-bind="foreach: typing()">
+        <span data-bind="text: name">X</span> is typing...
+    </div>
+
+    <form action="#" id="new-message-form" class="write-form" data-bind="submit: send">
+                <textarea class="new-message-area" placeholder="Type your message" name="e" rows="2"
+                          maxlength="256"
+                          data-bind="textInput: newMessage, submitOnEnter"></textarea>
+        <i class="fa fa-picture-o"></i>
+        <i class="fa fa-file-o"></i>
+        <input class="btn btn-default send" type="submit" value="send"
+               data-bind="enabled: newMessage().length > 0"/>
+    </form>
 </div>
-
-<form action="#" id="new-message-form" class="write-form" data-bind="submit: send">
-            <textarea class="new-message-area" placeholder="Type your message" name="e" rows="2"
-                      maxlength="256"
-                      data-bind="textInput: newMessage"></textarea>
-    <i class="fa fa-picture-o"></i>
-    <i class="fa fa-file-o"></i>
-    <input class="btn btn-default send" type="submit" value="send"
-           data-bind="enabled: newMessage().length > 0"/>
-</form>

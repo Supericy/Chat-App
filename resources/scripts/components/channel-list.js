@@ -6,8 +6,17 @@ import ko from 'knockout';
 
 class ChannelListViewModel {
     constructor(params) {
-        console.log('params', params);
-        this.channels = ko.observableArray(params.channels);
+        this.channels = params.channels;
+        this.channel = params.channel;
+    }
+
+    switchChannel(newChannel) {
+        console.log('New Channel', newChannel);
+
+        this.channel().leave();
+
+        newChannel.join();
+        this.channel(newChannel);
     }
 }
 

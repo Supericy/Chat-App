@@ -23,40 +23,15 @@
 </head>
 <body>
 
-<div id="login">
-    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="loginmodal-container">
-                <h1>Login to Your Account</h1><br>
-                <form action="#" data-bind="submit: attemptAuth">
-                    <input type="text" placeholder="Name" data-bind="textInput: name">
-                    <input type="password" placeholder="Password" data-bind="textInput: password">
-                    <input type="submit" class="login loginmodal-submit" value="Login"
-                           data-bind="disable: isAuthenticating()">
-                </form>
-
-                <div style="text-align: center; color: orangered" data-bind="text: error()">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<login params="skipAuth: skipAuth, onAuthSuccess: $root.init.bind($root)"></login>
 
 <div class="ui">
     <div class="left-menu">
-        <div id="channels" style="display: none;" data-bind="visible: true">
-            <channel-list params="channels: channels"></channel-list>
-        </div>
-
-        <div id="users" style="display: none;" data-bind="visible: true">
-            <user-list params="channel: channel"></user-list>
-        </div>
+        <channel-list params="channels: channels, channel: channel, me: me"></channel-list>
+        <user-list params="channel: channel"></user-list>
     </div>
 
-    <div id="chat" class="chat" style="display: none;" data-bind="visible: true">
-        <chat-pane params="channel: channel"></chat-pane>
-    </div>
+    <chat-pane class="chat" params="channel: channel, me: me"></chat-pane>
 </div>
 
 <script src="/scripts/build.js"></script>

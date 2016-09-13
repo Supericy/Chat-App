@@ -1,16 +1,18 @@
-<div class="left-menu-header">
-    USERS
-    <form action="#" class="input-group search" data-bind="textInput: searchQuery">
-        <input type="text" placeholder="search..."/>
-    </form>
-</div>
+<div class="users">
+    <div class="left-menu-header">
+        USERS
+        <form action="#" class="input-group search" data-bind="textInput: searchQuery">
+            <input type="text" placeholder="search..."/>
+        </form>
+    </div>
 
-<menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
-    <li>
-        <img width="50" height="50" src="images/no-user-image.gif">
-        <div class="info">
-            <div class="user" data-bind="text: name"></div>
-            <div class="status on"> online</div>
-        </div>
-    </li>
-</menu>
+    <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
+        <li>
+            <img width="50" height="50" src="images/no-user-image.gif">
+            <div class="info">
+                <div class="user" data-bind="text: name"></div>
+                <div class="status on"> online</div>
+            </div>
+        </li>
+    </menu>
+</div>

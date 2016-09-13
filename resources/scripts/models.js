@@ -5,8 +5,9 @@
 import $ from 'jquery';
 import 'jquery.nicescroll'; // jquery plugin
 import Pusher from 'pusher-js';
+import ko from 'knockout';
 
-Pusher.logToConsole = true;
+//Pusher.logToConsole = true;
 
 export class User {
     constructor(parameters) {
@@ -18,12 +19,13 @@ export class User {
         if (this.api_token) {
             this.pusher = new Pusher('944b0bdac25cd6df507f', {
                 authEndpoint: '/api/v1/pusher/auth',
-                auth: {
+                auth:         {
                     headers: {
                         'Authorization': 'API-TOKEN ' + this.api_token
                     }
                 },
-                encrypted: true
+                encrypted:    true,
+                disableStats: true
             });
         }
     }
@@ -63,8 +65,8 @@ export class User {
 
     publicify() {
         return {
-            id: this.id,
-            name: this.name,
+            id:         this.id,
+            name:       this.name,
             created_at: this.created_at
         };
     }
@@ -79,15 +81,26 @@ export class Channel {
         this.name = parameters.name;
         this.display_name = parameters.display_name;
         this.created_at = parameters.created_at;
+
+        this.isJoined = ko.observable(false);
     }
 
     join() {
         let pusher = this.user.getPusher();
         this.pChannel = pusher.subscribe(this.name);
+
+        this.isJoined(true);
+
+        return this;
     }
 
-    onChannelJoin(callback) {
+    leave() {
+        let pusher = this.user.getPusher();
+        pusher.unsubscribe(this.name);
 
+        this.isJoined(false);
+
+        return this;
     }
 
     getUrl() {
@@ -195,11 +208,11 @@ export class Message {
 
     static newLocalMessage(user, text) {
         return new Message({
-            id: -1,
-            user_id: user.id,
-            text: text,
+            id:         -1,
+            user_id:    user.id,
+            text:       text,
             created_at: Date.now(),
-            user: user
+            user:       user
         });
     }
 }

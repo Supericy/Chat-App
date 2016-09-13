@@ -27680,26 +27680,44 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ChannelListComponent = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by Chad on 2016-09-12.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
 var _knockout = require('knockout');
 
 var _knockout2 = _interopRequireDefault(_knockout);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /**
-                                                                                                                                                           * Created by Chad on 2016-09-12.
-                                                                                                                                                           */
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ChannelListViewModel = function ChannelListViewModel(params) {
-    _classCallCheck(this, ChannelListViewModel);
+var ChannelListViewModel = function () {
+    function ChannelListViewModel(params) {
+        _classCallCheck(this, ChannelListViewModel);
 
-    console.log('params', params);
-    this.channels = _knockout2.default.observableArray(params.channels);
-};
+        this.channels = params.channels;
+        this.channel = params.channel;
+    }
+
+    _createClass(ChannelListViewModel, [{
+        key: 'switchChannel',
+        value: function switchChannel(newChannel) {
+            console.log('New Channel', newChannel);
+
+            this.channel().leave();
+
+            newChannel.join();
+            this.channel(newChannel);
+        }
+    }]);
+
+    return ChannelListViewModel;
+}();
 
 var ChannelListComponent = exports.ChannelListComponent = {
     viewModel: ChannelListViewModel,
-    template: "<div class=\"left-menu-header\">\r\n    CHANNELS\r\n    <form action=\"#\" class=\"input-group search\">\r\n        <input type=\"text\" placeholder=\"search...\"/>\r\n    </form>\r\n</div>\r\n\r\n<menu class=\"left-menu-body list-friends list-channels\" data-bind=\"foreach: channels\">\r\n    <li data-bind=\"click: join\">\r\n        <img width=\"50\" height=\"50\" src=\"images/no-user-image.gif\">\r\n        <div class=\"info\">\r\n            <div class=\"user\" data-bind=\"text: display_name\"></div>\r\n            <div class=\"status on\"> 13 users</div>\r\n        </div>\r\n    </li>\r\n</menu>"
+    template: "<div class=\"channels\">\r\n    <div class=\"left-menu-header\">\r\n        CHANNELS\r\n        <form action=\"#\" class=\"input-group search\">\r\n            <input type=\"text\" placeholder=\"search...\"/>\r\n        </form>\r\n    </div>\r\n\r\n    <menu class=\"left-menu-body list-friends list-channels\" data-bind=\"foreach: channels\">\r\n        <li data-bind=\"click: $root.switchChannel.bind($root)\">\r\n            <img width=\"50\" height=\"50\" src=\"images/no-user-image.gif\">\r\n            <div class=\"info\">\r\n                <div class=\"user\" data-bind=\"text: display_name\"></div>\r\n                <div class=\"status on\"> 13 users</div>\r\n            </div>\r\n        </li>\r\n    </menu>\r\n</div>"
 };
 
 },{"knockout":4}],12:[function(require,module,exports){
@@ -27744,31 +27762,39 @@ var ChatPaneViewModel = function () {
 
         _classCallCheck(this, ChatPaneViewModel);
 
+        this.me = params.me;
         this.channel = params.channel;
         this.newMessage = _knockout2.default.observable("");
         this.messages = _knockout2.default.observableArray();
         this.typing = _knockout2.default.observableArray();
-        //this.isUserTypingHandler = new IsUserTypingHandler(this.newMessage, this.typing, this.channel, this.channel.me);
-        (0, _util.applyUserTypingHandler)(this.newMessage, this.typing, this.channel, this.channel.me);
+        (0, _util.applyUserTypingHandler)(this);
 
         this.name = _knockout2.default.computed(function () {
-            return _this.channel.me.name;
-        });
-
-        this.channel.getHistory().then(function (messages) {
-            messages.forEach(function (message) {
-                _this.pushMessage(message.user, message);
-            });
-        });
-
-        this.channel.onNewMessage(function (user, message) {
-            // our own message, let's confirm it
-            if (_this.channel.me.name === user.name) {
-                return _this.confirmMessage(message);
+            if (!_this.me()) {
+                return 'Unknown';
             }
 
-            // someone elses message, let's process it
-            return _this.pushMessage(user, message);
+            return _this.me().name;
+        });
+
+        this.channel.subscribe(function (channel) {
+            _this.messages([]);
+
+            channel.getHistory().then(function (messages) {
+                messages.forEach(function (message) {
+                    _this.pushMessage(message.user, message);
+                });
+            });
+
+            channel.onNewMessage(function (user, message) {
+                // our own message, let's confirm it
+                if (_this.me().name === user.name) {
+                    return _this.confirmMessage(message);
+                }
+
+                // someone elses message, let's process it
+                return _this.pushMessage(user, message);
+            });
         });
     }
 
@@ -27811,7 +27837,7 @@ var ChatPaneViewModel = function () {
     }, {
         key: 'pushMessage',
         value: function pushMessage(user, message) {
-            var isMessageLocal = this.channel.me.name === user.name;
+            var isMessageLocal = this.me().name === user.name;
             var messageVM = this.previousMessageVM();
 
             if (messageVM !== null && messageVM.user.name === user.name) {
@@ -27820,8 +27846,6 @@ var ChatPaneViewModel = function () {
                 messageVM = new MessageViewModel(user, message, isMessageLocal);
                 this.messages.push(messageVM);
             }
-
-            this.resizeAndScrollMessages();
 
             return messageVM;
         }
@@ -27834,44 +27858,10 @@ var ChatPaneViewModel = function () {
                 return;
             }
 
-            this.channel.sendMessage(text);
-            this.pushMessage(this.channel.me, _models.Message.newLocalMessage(this.channel.me, text));
+            this.channel().sendMessage(text);
+            this.pushMessage(this.me(), _models.Message.newLocalMessage(this.me(), text));
 
             this.newMessage("");
-        }
-    }, {
-        key: 'bindjQueryHandlers',
-        value: function bindjQueryHandlers() {
-            (0, _jquery2.default)(".ui .new-message-area").keypress(function (e) {
-                if (e.keyCode === 13 && !e.shiftKey) {
-                    (0, _jquery2.default)('#new-message-form').submit();
-                    e.preventDefault();
-                }
-            });
-
-            (0, _jquery2.default)(".ui .list-friends").niceScroll({
-                autohidemode: false,
-                smoothscroll: false,
-                cursorcolor: "#696c75",
-                cursorwidth: "8px",
-                cursorborder: "none"
-            });
-
-            (0, _jquery2.default)(".messages").niceScroll({
-                autohidemode: false,
-                smoothscroll: false,
-                cursorcolor: "#cdd2d6",
-                cursorwidth: "8px",
-                cursorborder: "none"
-            });
-        }
-    }, {
-        key: 'resizeAndScrollMessages',
-        value: function resizeAndScrollMessages() {
-            var $messages = (0, _jquery2.default)('.messages');
-
-            $messages.getNiceScroll(0).resize();
-            $messages.getNiceScroll(0).doScrollTop(999999, 999);
         }
     }]);
 
@@ -27929,10 +27919,125 @@ var MessageViewModel = function () {
 
 var ChatPaneComponent = exports.ChatPaneComponent = {
     viewModel: ChatPaneViewModel,
-    template: "<div class=\"top\">\r\n    <div class=\"avatar\">\r\n        <img width=\"50\" height=\"50\" src=\"http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg\">\r\n    </div>\r\n    <div class=\"info\">\r\n        <div class=\"name\" data-bind=\"text: name()\">Your Name</div>\r\n        <!--                <div class=\"count\">already 1 902 messages</div>-->\r\n    </div>\r\n    <div style=\"display: inline-block; float: right;\">\r\n        <button id=\"send-test-general\" data-bind=\"click: serverBroadcast\">Send Server Message\r\n        </button>\r\n    </div>\r\n</div>\r\n\r\n<ul class=\"messages\" data-bind=\"foreach: {data: messages(), afterRender: bindjQueryHandlers}\">\r\n    <li data-bind=\"css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }\">\r\n        <div class=\"head\">\r\n            <span class=\"time\" data-bind=\"text: timestamp()\"></span>\r\n            <span class=\"name\" data-bind=\"text: name()\"></span>\r\n        </div>\r\n        <div class=\"message\" data-bind=\"foreach: messageBlocks()\">\r\n            <div data-bind=\"css: {'message-unconfirmed': !confirmed()}, text: text()\"></div>\r\n        </div>\r\n    </li>\r\n</ul>\r\n\r\n<div class=\"is-typing\" data-bind=\"foreach: typing()\">\r\n    <span data-bind=\"text: name\">X</span> is typing...\r\n</div>\r\n\r\n<form action=\"#\" id=\"new-message-form\" class=\"write-form\" data-bind=\"submit: send\">\r\n            <textarea class=\"new-message-area\" placeholder=\"Type your message\" name=\"e\" rows=\"2\"\r\n                      maxlength=\"256\"\r\n                      data-bind=\"textInput: newMessage\"></textarea>\r\n    <i class=\"fa fa-picture-o\"></i>\r\n    <i class=\"fa fa-file-o\"></i>\r\n    <input class=\"btn btn-default send\" type=\"submit\" value=\"send\"\r\n           data-bind=\"enabled: newMessage().length > 0\"/>\r\n</form>"
+    template: "<div class=\"chat\">\r\n    <div class=\"top\">\r\n        <div class=\"avatar\">\r\n            <img width=\"50\" height=\"50\" src=\"http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg\">\r\n        </div>\r\n        <div class=\"info\">\r\n            <div class=\"name\" data-bind=\"text: name()\">Your Name</div>\r\n            <!--                <div class=\"count\">already 1 902 messages</div>-->\r\n        </div>\r\n        <div style=\"display: inline-block; float: right;\">\r\n            <button id=\"send-test-general\" data-bind=\"click: serverBroadcast\">Send Server Message\r\n            </button>\r\n        </div>\r\n    </div>\r\n\r\n    <ul class=\"messages\" data-bind=\"niceScroll: {autoscroll: true}, foreach: messages()\">\r\n        <li data-bind=\"css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }\">\r\n            <div class=\"head\">\r\n                <span class=\"time\" data-bind=\"text: timestamp()\"></span>\r\n                <span class=\"name\" data-bind=\"text: name()\"></span>\r\n            </div>\r\n            <div class=\"message\" data-bind=\"foreach: messageBlocks()\">\r\n                <div data-bind=\"css: {'message-unconfirmed': !confirmed()}, text: text()\"></div>\r\n            </div>\r\n        </li>\r\n    </ul>\r\n\r\n    <div class=\"is-typing\" data-bind=\"foreach: typing()\">\r\n        <span data-bind=\"text: name\">X</span> is typing...\r\n    </div>\r\n\r\n    <form action=\"#\" id=\"new-message-form\" class=\"write-form\" data-bind=\"submit: send\">\r\n                <textarea class=\"new-message-area\" placeholder=\"Type your message\" name=\"e\" rows=\"2\"\r\n                          maxlength=\"256\"\r\n                          data-bind=\"textInput: newMessage, submitOnEnter\"></textarea>\r\n        <i class=\"fa fa-picture-o\"></i>\r\n        <i class=\"fa fa-file-o\"></i>\r\n        <input class=\"btn btn-default send\" type=\"submit\" value=\"send\"\r\n               data-bind=\"enabled: newMessage().length > 0\"/>\r\n    </form>\r\n</div>"
 };
 
-},{"../models":15,"../util":16,"jquery":3,"jquery.nicescroll":2,"knockout":4,"moment":5}],13:[function(require,module,exports){
+},{"../models":17,"../util":18,"jquery":3,"jquery.nicescroll":2,"knockout":4,"moment":5}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.LoginComponent = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by Chad on 2016-09-13.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _knockout = require('knockout');
+
+var _knockout2 = _interopRequireDefault(_knockout);
+
+var _models = require('../models');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+require('bootstrap');
+
+var LoginViewModel = function () {
+    function LoginViewModel(params) {
+        var _this = this;
+
+        _classCallCheck(this, LoginViewModel);
+
+        this.$login = (0, _jquery2.default)('#login');
+        this.$modal = (0, _jquery2.default)('#login-modal');
+
+        this.name = _knockout2.default.observable("");
+        this.password = _knockout2.default.observable("");
+        this.error = _knockout2.default.observable("");
+        this.authenticating = _knockout2.default.observable(false);
+        this.onAuthSuccess = params.onAuthSuccess;
+
+        this.isAuthenticating = _knockout2.default.computed(function () {
+            return _this.authenticating();
+        });
+
+        if (!params.skipAuth) {
+            this.showModal();
+        }
+    }
+
+    _createClass(LoginViewModel, [{
+        key: 'setAuthenticating',
+        value: function setAuthenticating(bool) {
+            console.log('Authenticating', bool);
+            this.authenticating(bool);
+        }
+    }, {
+        key: 'attemptAuth',
+        value: function attemptAuth() {
+            var _this2 = this;
+
+            this.setAuthenticating(true);
+
+            _jquery2.default.ajax({
+                type: "POST",
+                url: '/api/v1/user/auth',
+                data: {
+                    name: this.name(),
+                    password: this.password()
+                },
+                dataType: 'json'
+            }).done(function (userData) {
+                console.log('Login Success', userData);
+                _this2.hideModal();
+
+                _this2.onAuthSuccess(new _models.User(userData));
+            }).fail(function (data) {
+                console.log('Login Error', data);
+
+                _this2.error(data.responseJSON.error.message);
+            }).always(function (data) {
+                _this2.setAuthenticating(false);
+            });
+        }
+    }, {
+        key: 'showModal',
+        value: function showModal() {
+            this.$modal.modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        }
+    }, {
+        key: 'hideModal',
+        value: function hideModal() {
+            var _this3 = this;
+
+            this.$modal.modal('hide');
+            this.$modal.on('hidden.bs.modal', function () {
+                _this3.$login.remove();
+            });
+        }
+    }]);
+
+    return LoginViewModel;
+}();
+
+var LoginComponent = exports.LoginComponent = {
+    viewModel: LoginViewModel,
+    template: "<div id=\"login\" data-bind=\"\">\r\n    <div class=\"modal fade\" id=\"login-modal\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\"\r\n         aria-hidden=\"true\">\r\n        <div class=\"modal-dialog\">\r\n            <div class=\"loginmodal-container\">\r\n                <h1>Login to Your Account</h1><br>\r\n                <form action=\"#\" data-bind=\"submit: attemptAuth\">\r\n                    <input type=\"text\" placeholder=\"Name\" data-bind=\"textInput: name\">\r\n                    <input type=\"password\" placeholder=\"Password\" data-bind=\"textInput: password\">\r\n                    <input type=\"submit\" class=\"login loginmodal-submit\" value=\"Login\"\r\n                           data-bind=\"disable: isAuthenticating()\">\r\n                </form>\r\n\r\n                <div style=\"text-align: center; color: orangered\" data-bind=\"text: error()\">\r\n                </div>\r\n            </div>\r\n        </div>\r\n    </div>\r\n</div>"
+};
+
+},{"../models":17,"bootstrap":1,"jquery":3,"knockout":4}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27968,12 +28073,16 @@ var UserListViewModel = function () {
             });
         });
 
-        this.channel.onUserAdded(function (user) {
-            _this.add(user);
-        });
+        this.channel.subscribe(function (channel) {
+            _this.users([]);
 
-        this.channel.onUserRemoved(function (user) {
-            _this.remove(user);
+            channel.onUserAdded(function (user) {
+                _this.add(user);
+            });
+
+            channel.onUserRemoved(function (user) {
+                _this.remove(user);
+            });
         });
     }
 
@@ -27981,7 +28090,15 @@ var UserListViewModel = function () {
         key: 'add',
         value: function add(user) {
             console.log('Add User', user);
-            if (this.users().indexOf(user) < 0) {
+
+            var found = false;
+            this.users().forEach(function (item) {
+                if (!found) {
+                    found = item.id === user.id;
+                }
+            });
+
+            if (!found) {
                 this.users.push(user);
             }
         }
@@ -27989,7 +28106,10 @@ var UserListViewModel = function () {
         key: 'remove',
         value: function remove(user) {
             console.log('Remove User', user);
-            this.users.remove(user);
+
+            this.users.remove(function (item) {
+                return item.id === user.id;
+            });
         }
     }]);
 
@@ -27998,11 +28118,15 @@ var UserListViewModel = function () {
 
 var UserListComponent = exports.UserListComponent = {
     viewModel: UserListViewModel,
-    template: "<div class=\"left-menu-header\">\r\n    USERS\r\n    <form action=\"#\" class=\"input-group search\" data-bind=\"textInput: searchQuery\">\r\n        <input type=\"text\" placeholder=\"search...\"/>\r\n    </form>\r\n</div>\r\n\r\n<menu class=\"left-menu-body list-friends\" data-bind=\"foreach: filteredUsers()\">\r\n    <li>\r\n        <img width=\"50\" height=\"50\" src=\"images/no-user-image.gif\">\r\n        <div class=\"info\">\r\n            <div class=\"user\" data-bind=\"text: name\"></div>\r\n            <div class=\"status on\"> online</div>\r\n        </div>\r\n    </li>\r\n</menu>"
+    template: "<div class=\"users\">\r\n    <div class=\"left-menu-header\">\r\n        USERS\r\n        <form action=\"#\" class=\"input-group search\" data-bind=\"textInput: searchQuery\">\r\n            <input type=\"text\" placeholder=\"search...\"/>\r\n        </form>\r\n    </div>\r\n\r\n    <menu class=\"left-menu-body list-friends\" data-bind=\"foreach: filteredUsers()\">\r\n        <li>\r\n            <img width=\"50\" height=\"50\" src=\"images/no-user-image.gif\">\r\n            <div class=\"info\">\r\n                <div class=\"user\" data-bind=\"text: name\"></div>\r\n                <div class=\"status on\"> online</div>\r\n            </div>\r\n        </li>\r\n    </menu>\r\n</div>"
 };
 
-},{"knockout":4}],14:[function(require,module,exports){
+},{"knockout":4}],15:[function(require,module,exports){
 'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
 var _jquery = require('jquery');
 
@@ -28010,17 +28134,9 @@ var _jquery2 = _interopRequireDefault(_jquery);
 
 require('jquery.nicescroll');
 
-var _urijs = require('urijs');
-
-var _urijs2 = _interopRequireDefault(_urijs);
-
 var _knockout = require('knockout');
 
 var _knockout2 = _interopRequireDefault(_knockout);
-
-var _models = require('./models');
-
-var _viewmodels = require('./viewmodels');
 
 var _channelList = require('./components/channel-list');
 
@@ -28028,71 +28144,137 @@ var _userList = require('./components/user-list');
 
 var _chatPane = require('./components/chat-pane');
 
+var _login = require('./components/login');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var bindjQueryHandlers = function bindjQueryHandlers() {
-    (0, _jquery2.default)(".ui .new-message-area").keypress(function (e) {
-        if (e.keyCode === 13 && !e.shiftKey) {
-            (0, _jquery2.default)('#new-message-form').submit();
-            e.preventDefault();
+_knockout2.default.bindingHandlers.niceScroll = {
+    init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+        var $elm = (0, _jquery2.default)(element);
+        var settings = _jquery2.default.extend({
+            autohidemode: false,
+            smoothscroll: false,
+            cursorcolor: "#cdd2d6",
+            cursorwidth: "8px",
+            cursorborder: "none",
+            autoscroll: false
+        }, valueAccessor());
+
+        $elm.niceScroll(settings);
+
+        if (settings.autoscroll) {
+            (function () {
+                var $scroll = $elm.getNiceScroll(0);
+                var observer = new MutationObserver(function (mutations) {
+                    $scroll.resize();
+                    $scroll.doScrollTop(999999, 999);
+                });
+                var config = {
+                    childList: true,
+                    subtree: true
+                };
+
+                observer.observe(element, config);
+            })();
         }
-    });
-
-    (0, _jquery2.default)(".ui .list-friends").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor: "#696c75",
-        cursorwidth: "8px",
-        cursorborder: "none"
-    });
-
-    (0, _jquery2.default)(".messages").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor: "#cdd2d6",
-        cursorwidth: "8px",
-        cursorborder: "none"
-    });
+    }
 }; // jquery plugin
 
-var bootstrap = function bootstrap(me) {
-    _models.Channel.getAll(me).then(function (channels) {
-        var channel = channels[0];
-        channel.join();
 
-        _knockout2.default.components.register('channel-list', _channelList.ChannelListComponent);
-        _knockout2.default.components.register('user-list', _userList.UserListComponent);
-        _knockout2.default.components.register('chat-pane', _chatPane.ChatPaneComponent);
+_knockout2.default.bindingHandlers.submitOnEnter = {
+    init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+        var $elm = (0, _jquery2.default)(element);
 
-        _knockout2.default.applyBindings({
-            channels: channels
-        }, (0, _jquery2.default)('#channels')[0]);
-
-        _knockout2.default.applyBindings({
-            channel: channel
-        }, (0, _jquery2.default)('#users')[0]);
-
-        _knockout2.default.applyBindings({
-            channel: channel
-        }, (0, _jquery2.default)('#chat')[0]);
-
-        bindjQueryHandlers();
-    });
+        $elm.keypress(function (e) {
+            if (e.keyCode === 13 && !e.shiftKey) {
+                $elm.closest('form').submit();
+                e.preventDefault();
+            }
+        });
+    }
 };
 
-var login = new _viewmodels.LoginViewModel(bootstrap);
+_knockout2.default.components.register('channel-list', _channelList.ChannelListComponent);
+_knockout2.default.components.register('user-list', _userList.UserListComponent);
+_knockout2.default.components.register('chat-pane', _chatPane.ChatPaneComponent);
+_knockout2.default.components.register('login', _login.LoginComponent);
 
-if ((0, _urijs2.default)().hasQuery('skipAuth')) {
-    login.init({
-        id: 3,
-        name: 'Chad',
-        api_token: 'yXwSG6DbNCzPhQ=='
-    });
-} else {
-    login.prompt();
-}
+exports.default = _knockout2.default;
 
-},{"./components/channel-list":11,"./components/chat-pane":12,"./components/user-list":13,"./models":15,"./viewmodels":17,"jquery":3,"jquery.nicescroll":2,"knockout":4,"urijs":9}],15:[function(require,module,exports){
+},{"./components/channel-list":11,"./components/chat-pane":12,"./components/login":13,"./components/user-list":14,"jquery":3,"jquery.nicescroll":2,"knockout":4}],16:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+var _urijs = require('urijs');
+
+var _urijs2 = _interopRequireDefault(_urijs);
+
+var _knockoutBootstrapped = require('./knockout-bootstrapped');
+
+var _knockoutBootstrapped2 = _interopRequireDefault(_knockoutBootstrapped);
+
+var _models = require('./models');
+
+var _viewmodels = require('./viewmodels');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var App = function () {
+    function App() {
+        _classCallCheck(this, App);
+
+        this.skipAuth = (0, _urijs2.default)().hasQuery('skipAuth');
+        this.channel = _knockoutBootstrapped2.default.observable();
+        this.channels = _knockoutBootstrapped2.default.observableArray();
+        this.me = _knockoutBootstrapped2.default.observable();
+        this.app = this;
+
+        if (this.skipAuth) {
+            this.init(new _models.User({
+                id: 3,
+                name: 'Chad',
+                api_token: 'yXwSG6DbNCzPhQ=='
+            }));
+        }
+    }
+
+    _createClass(App, [{
+        key: 'init',
+        value: function init(me) {
+            var _this = this;
+
+            this.me(me);
+
+            _models.Channel.getAll(me).then(function (channels) {
+                channels.forEach(function (channel) {
+                    _this.channels.push(channel);
+                });
+            });
+        }
+    }, {
+        key: 'switchChannel',
+        value: function switchChannel(newChannel) {
+            if (this.channel()) {
+                this.channel().leave();
+            }
+
+            this.channel(newChannel.join());
+        }
+    }]);
+
+    return App;
+}();
+
+_knockoutBootstrapped2.default.applyBindings(new App());
+
+},{"./knockout-bootstrapped":15,"./models":17,"./viewmodels":19,"jquery":3,"urijs":9}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -28117,11 +28299,15 @@ var _pusherJs = require('pusher-js');
 
 var _pusherJs2 = _interopRequireDefault(_pusherJs);
 
+var _knockout = require('knockout');
+
+var _knockout2 = _interopRequireDefault(_knockout);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-_pusherJs2.default.logToConsole = true;
+//Pusher.logToConsole = true;
 
 var User = exports.User = function () {
     function User(parameters) {
@@ -28140,7 +28326,8 @@ var User = exports.User = function () {
                         'Authorization': 'API-TOKEN ' + this.api_token
                     }
                 },
-                encrypted: true
+                encrypted: true,
+                disableStats: true
             });
         }
     }
@@ -28204,6 +28391,8 @@ var Channel = exports.Channel = function () {
         this.name = parameters.name;
         this.display_name = parameters.display_name;
         this.created_at = parameters.created_at;
+
+        this.isJoined = _knockout2.default.observable(false);
     }
 
     _createClass(Channel, [{
@@ -28211,10 +28400,21 @@ var Channel = exports.Channel = function () {
         value: function join() {
             var pusher = this.user.getPusher();
             this.pChannel = pusher.subscribe(this.name);
+
+            this.isJoined(true);
+
+            return this;
         }
     }, {
-        key: 'onChannelJoin',
-        value: function onChannelJoin(callback) {}
+        key: 'leave',
+        value: function leave() {
+            var pusher = this.user.getPusher();
+            pusher.unsubscribe(this.name);
+
+            this.isJoined(false);
+
+            return this;
+        }
     }, {
         key: 'getUrl',
         value: function getUrl() {
@@ -28349,66 +28549,70 @@ var Message = exports.Message = function () {
     return Message;
 }();
 
-},{"jquery":3,"jquery.nicescroll":2,"pusher-js":6}],16:[function(require,module,exports){
+},{"jquery":3,"jquery.nicescroll":2,"knockout":4,"pusher-js":6}],18:[function(require,module,exports){
 'use strict';
+
+//export function applyUserTypingHandler(observableInput, observableUsersTypingCollection, channel, user) {
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.applyUserTypingHandler = applyUserTypingHandler;
-function applyUserTypingHandler(observableInput, observableUsersTypingCollection, channel, user) {
-    var _this = this;
+function applyUserTypingHandler(view) {
+    function trigger(event) {
+        view.channel().trigger(event, view.me().publicify());
+    }
 
-    var t = void 0;
-    observableInput.subscribe(function (value) {
-        clearTimeout(t);
-        t = setTimeout(function () {
-            if (value.length > 0) {
-                channel.trigger('client-started-typing', user.publicify());
-            } else {
-                channel.trigger('client-stopped-typing', user.publicify());
-            }
-        }, 500);
-    });
-
-    channel.bind('client-started-typing', function (data) {
-        console.log('Started Typing', data);
-
+    function add(data) {
         var found = false;
-        observableUsersTypingCollection().forEach(function (item) {
+        view.typing().forEach(function (item) {
             if (!found) {
                 found = item.id === data.id;
             }
         });
 
         if (!found) {
-            observableUsersTypingCollection.push(data);
+            view.typing.push(data);
         }
-    });
-    channel.bind('client-stopped-typing', function (data) {
-        console.log('Stopped Typing', data);
-        observableUsersTypingCollection.remove(function (item) {
+    }
+
+    function remove(data) {
+        view.typing.remove(function (item) {
             return item.id === data.id;
         });
+    }
+
+    var t = void 0;
+    view.newMessage.subscribe(function (value) {
+        clearTimeout(t);
+        t = setTimeout(function () {
+            if (value.length > 0) {
+                trigger('client-started-typing');
+            } else {
+                trigger('client-stopped-typing');
+            }
+        }, 500);
     });
 
-    // remove user from our list of users typing when they leave the chat
-    channel.bind('pusher:member_removed', function (data) {
-        _this.typing.remove(function (item) {
-            return item.id === data.info.id;
+    view.channel.subscribe(function (channel) {
+        channel.bind('client-started-typing', function (data) {
+            console.log('Started Typing', data);
+            add(data);
+        });
+        channel.bind('client-stopped-typing', function (data) {
+            console.log('Stopped Typing', data);
+            remove(data);
+        });
+
+        // remove user from our list of users typing when they leave the chat
+        channel.bind('pusher:member_removed', function (data) {
+            remove(data.info);
         });
     });
 }
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.LoginViewModel = exports.MessageViewModel = exports.ChatViewModel = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _jquery = require('jquery');
 
@@ -28426,348 +28630,11 @@ var _models = require('./models');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /**
-                                                                                                                                                           * Created by Chad on 2016-09-12.
-                                                                                                                                                           */
+require('bootstrap'); /**
+                       * Created by Chad on 2016-09-12.
+                       */
 
-require('bootstrap');
-
-var IsUserTypingHandler = function IsUserTypingHandler(observableInput, observableUsersTypingCollection, channel, user) {
-    var _this = this;
-
-    _classCallCheck(this, IsUserTypingHandler);
-
-    var t;
-    observableInput.subscribe(function (value) {
-        clearTimeout(t);
-        t = setTimeout(function () {
-            if (value.length > 0) {
-                channel.trigger('client-started-typing', user.publicify());
-            } else {
-                channel.trigger('client-stopped-typing', user.publicify());
-            }
-        }, 500);
-    });
-
-    channel.bind('client-started-typing', function (data) {
-        console.log('Started Typing', data);
-
-        var found = false;
-        observableUsersTypingCollection().forEach(function (item) {
-            if (!found) found = item.id === data.id;
-        });
-
-        if (!found) {
-            observableUsersTypingCollection.push(data);
-        }
-    });
-    channel.bind('client-stopped-typing', function (data) {
-        console.log('Stopped Typing', data);
-        observableUsersTypingCollection.remove(function (item) {
-            return item.id === data.id;
-        });
-    });
-
-    // remove user from our list of users typing when they leave the chat
-    channel.bind('pusher:member_removed', function (data) {
-        _this.typing.remove(function (item) {
-            return item.id === data.info.id;
-        });
-    });
-};
-
-//export class UserListViewModel {
-//    constructor(channel) {
-//        this.channel = channel;
-//        this.searchQuery = ko.observable("");
-//        this.users = ko.observableArray([]);
-//
-//        this.filteredUsers = ko.computed(() => {
-//            return ko.utils.arrayFilter(this.users(), (user) => {
-//                return user.name.toLowerCase().indexOf(this.searchQuery()) > -1;
-//            });
-//        });
-//
-//        this.channel.onUserAdded((user) => {
-//            this.add(user);
-//        });
-//
-//        this.channel.onUserRemoved((user) => {
-//            this.remove(user);
-//        });
-//    }
-//
-//    add(user) {
-//        console.log('Add User', user);
-//        if (this.users().indexOf(user) < 0) {
-//            this.users.push(user);
-//        }
-//    }
-//
-//    remove(user) {
-//        console.log('Remove User', user);
-//        this.users.remove(user);
-//    }
-//}
-
-//export class ChannelListViewModel {
-//    constructor(channels) {
-//        this.channels = ko.observableArray(channels);
-//    }
-//}
-
-var ChatViewModel = exports.ChatViewModel = function () {
-    function ChatViewModel(channel) {
-        var _this2 = this;
-
-        _classCallCheck(this, ChatViewModel);
-
-        this.channel = channel;
-        this.newMessage = _knockout2.default.observable("");
-        this.messages = _knockout2.default.observableArray();
-        this.typing = _knockout2.default.observableArray();
-        this.isUserTypingHandler = new IsUserTypingHandler(this.newMessage, this.typing, channel, this.channel.me);
-
-        this.name = _knockout2.default.computed(function () {
-            return _this2.channel.me.name;
-        });
-
-        this.channel.getHistory().then(function (messages) {
-            messages.forEach(function (message) {
-                _this2.pushMessage(message.user, message);
-            });
-        });
-
-        this.channel.onNewMessage(function (user, message) {
-            // our own message, let's confirm it
-            if (_this2.channel.me.name === user.name) {
-                return _this2.confirmMessage(message);
-            }
-
-            // someone elses message, let's process it
-            return _this2.pushMessage(user, message);
-        });
-    }
-
-    /**
-     * Broadcasts a new message from the server to test functionality
-     */
-
-
-    _createClass(ChatViewModel, [{
-        key: 'serverBroadcast',
-        value: function serverBroadcast() {
-            _jquery2.default.get('/broadcast');
-        }
-    }, {
-        key: 'confirmMessage',
-        value: function confirmMessage(confirmedMessage) {
-            var returnMessageVM = null;
-
-            this.messages().some(function (messageVM) {
-                returnMessageVM = messageVM;
-
-                return messageVM.confirmMessage(confirmedMessage);
-            });
-
-            return returnMessageVM;
-        }
-    }, {
-        key: 'previousMessageVM',
-        value: function previousMessageVM() {
-            var vm = null;
-            var messages = this.messages();
-            var length = messages.length;
-
-            if (length > 0) {
-                vm = messages[length - 1];
-            }
-
-            return vm;
-        }
-    }, {
-        key: 'pushMessage',
-        value: function pushMessage(user, message) {
-            var isMessageLocal = this.channel.me.name === user.name;
-            var messageVM = this.previousMessageVM();
-
-            if (messageVM !== null && messageVM.user.name === user.name) {
-                messageVM.attachMessage(message);
-            } else {
-                messageVM = new MessageViewModel(user, message, isMessageLocal);
-                this.messages.push(messageVM);
-            }
-
-            this.resizeAndScrollMessages();
-
-            return messageVM;
-        }
-    }, {
-        key: 'send',
-        value: function send() {
-            var text = this.newMessage();
-
-            if (text.length < 1) {
-                return;
-            }
-
-            this.channel.sendMessage(text);
-            this.pushMessage(this.channel.me, _models.Message.newLocalMessage(this.channel.me, text));
-
-            this.newMessage("");
-        }
-    }, {
-        key: 'resizeAndScrollMessages',
-        value: function resizeAndScrollMessages() {
-            var $messages = (0, _jquery2.default)('.messages');
-
-            $messages.getNiceScroll(0).resize();
-            $messages.getNiceScroll(0).doScrollTop(999999, 999);
-        }
-    }]);
-
-    return ChatViewModel;
-}();
-
-var MessageBlock = function MessageBlock(message) {
-    var _this3 = this;
-
-    _classCallCheck(this, MessageBlock);
-
-    this.message = _knockout2.default.observable(message);
-
-    this.text = _knockout2.default.computed(function () {
-        return _this3.message().text;
-    });
-
-    this.confirmed = _knockout2.default.computed(function () {
-        return _this3.message().isConfirmed();
-    });
-};
-
-var MessageViewModel = exports.MessageViewModel = function () {
-    function MessageViewModel(user, message, isMessageLocal) {
-        _classCallCheck(this, MessageViewModel);
-
-        this.user = user;
-        this.timestamp = _knockout2.default.observable(_moment2.default.utc(this.created_at).local().format('LLL'));
-        this.name = _knockout2.default.observable(user.name);
-        this.messageBlocks = _knockout2.default.observableArray([new MessageBlock(message)]);
-        this.isMessageLocal = _knockout2.default.observable(isMessageLocal);
-    }
-
-    _createClass(MessageViewModel, [{
-        key: 'confirmMessage',
-        value: function confirmMessage(confirmedMessage) {
-            this.messageBlocks().some(function (block) {
-                if (!block.confirmed() && block.text() === confirmedMessage.text) {
-                    block.message(confirmedMessage);
-                    return true;
-                }
-
-                return false;
-            });
-        }
-    }, {
-        key: 'attachMessage',
-        value: function attachMessage(message) {
-            this.messageBlocks.push(new MessageBlock(message));
-        }
-    }]);
-
-    return MessageViewModel;
-}();
-
-var LoginViewModel = exports.LoginViewModel = function () {
-    function LoginViewModel(onAuthSuccess) {
-        var _this4 = this;
-
-        _classCallCheck(this, LoginViewModel);
-
-        this.$login = (0, _jquery2.default)('#login');
-        this.$modal = (0, _jquery2.default)('#login-modal');
-
-        this.name = _knockout2.default.observable("");
-        this.password = _knockout2.default.observable("");
-        this.error = _knockout2.default.observable("");
-        this.authenticating = _knockout2.default.observable(false);
-        this.onAuthSuccess = onAuthSuccess;
-
-        this.isAuthenticating = _knockout2.default.computed(function () {
-            return _this4.authenticating();
-        });
-
-        _knockout2.default.applyBindings(this, this.$login[0]);
-    }
-
-    _createClass(LoginViewModel, [{
-        key: 'setAuthenticating',
-        value: function setAuthenticating(bool) {
-            console.log('Authenticating', bool);
-            this.authenticating(bool);
-        }
-    }, {
-        key: 'prompt',
-        value: function prompt() {
-            this.showModal();
-        }
-    }, {
-        key: 'init',
-        value: function init(userData) {
-            this.onAuthSuccess(new _models.User(userData));
-        }
-    }, {
-        key: 'attemptAuth',
-        value: function attemptAuth() {
-            var _this5 = this;
-
-            this.setAuthenticating(true);
-
-            _jquery2.default.ajax({
-                type: "POST",
-                url: '/api/v1/user/auth',
-                data: {
-                    name: this.name(),
-                    password: this.password()
-                },
-                dataType: 'json'
-            }).done(function (userData) {
-                console.log('Login Success', userData);
-                _this5.hideModal();
-
-                _this5.init(userData);
-            }).fail(function (data) {
-                console.log('Login Error', data);
-
-                _this5.error(data.responseJSON.error.message);
-            }).always(function (data) {
-                _this5.setAuthenticating(false);
-            });
-        }
-    }, {
-        key: 'showModal',
-        value: function showModal() {
-            this.$modal.modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-        }
-    }, {
-        key: 'hideModal',
-        value: function hideModal() {
-            var _this6 = this;
-
-            this.$modal.modal('hide');
-            this.$modal.on('hidden.bs.modal', function () {
-                _this6.$login.remove();
-            });
-        }
-    }]);
-
-    return LoginViewModel;
-}();
-
-},{"./models":15,"bootstrap":1,"jquery":3,"knockout":4,"moment":5}]},{},[14])
+},{"./models":17,"bootstrap":1,"jquery":3,"knockout":4,"moment":5}]},{},[16])
 
 
 //# sourceMappingURL=build.js.map

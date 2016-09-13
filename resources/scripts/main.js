@@ -1,76 +1,46 @@
 'use strict';
 
 import $ from 'jquery';
-import 'jquery.nicescroll'; // jquery plugin
 
 import URI from 'urijs';
-import ko from 'knockout';
-import {Channel, User, Message} from './models';
-import {ChannelListViewModel, LoginViewModel, ChatViewModel, UserListViewModel} from './viewmodels';
+import ko from './knockout-bootstrapped';
+import {Channel, User} from './models';
+import {LoginViewModel} from './viewmodels';
 
-import {ChannelListComponent} from './components/channel-list';
-import {UserListComponent} from './components/user-list';
-import {ChatPaneComponent} from './components/chat-pane';
+class App {
+    constructor() {
+        this.skipAuth = URI().hasQuery('skipAuth');
+        this.channel = ko.observable();
+        this.channels = ko.observableArray();
+        this.me = ko.observable();
+        this.app = this;
 
-let bindjQueryHandlers = () => {
-    $(".ui .new-message-area").keypress(function (e) {
-        if (e.keyCode === 13 && !e.shiftKey) {
-            $('#new-message-form').submit();
-            e.preventDefault();
+        if (this.skipAuth) {
+            this.init(new User({
+                id:        3,
+                name:      'Chad',
+                api_token: 'yXwSG6DbNCzPhQ=='
+            }));
         }
-    });
+    }
 
-    $(".ui .list-friends").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor:  "#696c75",
-        cursorwidth:  "8px",
-        cursorborder: "none"
-    });
+    init(me) {
+        this.me(me);
 
-    $(".messages").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor:  "#cdd2d6",
-        cursorwidth:  "8px",
-        cursorborder: "none"
-    });
-};
+        Channel.getAll(me).then((channels) => {
+            channels.forEach((channel) => {
+                this.channels.push(channel);
+            });
+        });
+    }
 
-let bootstrap = (me) => {
-    Channel.getAll(me).then((channels) => {
-        let channel = channels[0];
-        channel.join();
+    switchChannel(newChannel) {
+        if (this.channel()) {
+            this.channel().leave();
+        }
 
-        ko.components.register('channel-list', ChannelListComponent);
-        ko.components.register('user-list', UserListComponent);
-        ko.components.register('chat-pane', ChatPaneComponent);
-
-        ko.applyBindings({
-            channels: channels
-        }, $('#channels')[0]);
-
-        ko.applyBindings({
-            channel: channel
-        }, $('#users')[0]);
-
-        ko.applyBindings({
-            channel: channel
-        }, $('#chat')[0]);
-
-        bindjQueryHandlers();
-    });
-};
-
-let login = new LoginViewModel(bootstrap);
-
-if (URI().hasQuery('skipAuth')) {
-    login.init({
-        id:        3,
-        name:      'Chad',
-        api_token: 'yXwSG6DbNCzPhQ=='
-    });
-} else {
-    login.prompt();
+        this.channel(newChannel.join());
+    }
 }
 
+ko.applyBindings(new App());

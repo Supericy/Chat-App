@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>Chatty</title>
 
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/style.css">
@@ -30,7 +29,7 @@
         <div class="modal-dialog">
             <div class="loginmodal-container">
                 <h1>Login to Your Account</h1><br>
-                <form action="#" data-bind="submit: login">
+                <form action="#" data-bind="submit: attemptAuth">
                     <input type="text" placeholder="Name" data-bind="textInput: name">
                     <input type="password" placeholder="Password" data-bind="textInput: password">
                     <input type="submit" class="login loginmodal-submit" value="Login"
@@ -45,93 +44,19 @@
 </div>
 
 <div class="ui">
-
     <div class="left-menu">
         <div id="channels" style="display: none;" data-bind="visible: true">
-            <div class="left-menu-header">
-                CHANNELS
-                <form action="#" class="input-group search">
-                    <input type="text" placeholder="search..."/>
-                </form>
-            </div>
-
-            <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
-                <li data-bind="click: join">
-<!--                <li>-->
-                    <img width="50" height="50" src="images/no-user-image.gif">
-                    <div class="info">
-                        <div class="user" data-bind="text: display_name"></div>
-                        <div class="status on"> 13 users</div>
-                    </div>
-                </li>
-            </menu>
+            <channel-list params="channels: channels"></channel-list>
         </div>
 
         <div id="users" style="display: none;" data-bind="visible: true">
-            <div class="left-menu-header">
-                USERS
-                <form action="#" class="input-group search" data-bind="textInput: searchQuery">
-                    <input type="text" placeholder="search..."/>
-                </form>
-            </div>
-
-            <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
-                <li>
-                    <img width="50" height="50" src="images/no-user-image.gif">
-                    <div class="info">
-                        <div class="user" data-bind="text: name"></div>
-                        <div class="status on"> online</div>
-                    </div>
-                </li>
-            </menu>
+            <user-list params="channel: channel"></user-list>
         </div>
     </div>
-
-
-
 
     <div id="chat" class="chat" style="display: none;" data-bind="visible: true">
-        <div class="top">
-            <div class="avatar">
-                <img width="50" height="50" src="http://cs625730.vk.me/v625730358/1126a/qEjM1AnybRA.jpg">
-            </div>
-            <div class="info">
-                <div class="name" data-bind="text: name()">Your Name</div>
-                <!--                <div class="count">already 1 902 messages</div>-->
-            </div>
-            <div style="display: inline-block; float: right;">
-                <button id="send-test-general" data-bind="click: serverBroadcast">Send Server Message
-                </button>
-            </div>
-        </div>
-        <ul class="messages" data-bind="foreach: messages()">
-            <li data-bind="css: { 'message-local': isMessageLocal(), 'message-friend': !isMessageLocal() }">
-                <div class="head">
-                    <span class="time" data-bind="text: timestamp()"></span>
-                    <span class="name" data-bind="text: name()"></span>
-                </div>
-                <div class="message" data-bind="foreach: messageBlocks()">
-                    <div data-bind="css: {'message-unconfirmed': !confirmed()}, text: text()"></div>
-                </div>
-            </li>
-        </ul>
-
-        <div class="is-typing" data-bind="foreach: typing()">
-            <span data-bind="text: name">X</span> is typing...
-        </div>
-
-        <form action="#" id="new-message-form" class="write-form" data-bind="submit: send">
-            <textarea class="new-message-area" placeholder="Type your message" name="e" rows="2"
-                      maxlength="256"
-                      data-bind="textInput: newMessage"></textarea>
-            <i class="fa fa-picture-o"></i>
-            <i class="fa fa-file-o"></i>
-            <input class="btn btn-default send" type="submit" value="send"
-                   data-bind="enabled: newMessage().length > 0"/>
-        </form>
+        <chat-pane params="channel: channel"></chat-pane>
     </div>
-
-
 </div>
 
 <script src="/scripts/build.js"></script>

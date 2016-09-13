@@ -44,7 +44,7 @@ $app->singleton(
 
 $app->singleton(
     Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
+    Laravel\Lumen\Console\Kernel::class
 );
 
 /*
@@ -90,7 +90,7 @@ $app->singleton(
 */
 
 $app->group(['namespace' => 'App\Http\Controllers'], function ($app) {
-    require __DIR__.'/../app/Http/routes.php';
+    require __DIR__.'/../app/routes.php';
 });
 
 return $app;

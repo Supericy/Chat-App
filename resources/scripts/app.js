@@ -14,11 +14,17 @@ class AuthModal {
         this.$modal = $('#login-modal');
     }
 
-    show() {
+    show(onAuthSuccess) {
         this.$modal.modal({
             backdrop: 'static',
             keyboard: false
         });
+
+        ko.applyBindings(new LoginViewModel((data) => {
+            this.hide();
+
+            onAuthSuccess(new User(data));
+        }), this.$login[0]);
     }
 
     hide() {
@@ -29,8 +35,6 @@ class AuthModal {
     }
 }
 
-
-let instance = null; // singleton instance
 class App {
     constructor() {
         this.user = null;
@@ -52,16 +56,6 @@ class App {
     init(currentUserData, initCallback) {
         this.user = new User(currentUserData);
 
-        //return this.user;
-        //this.pusher = new Pusher('944b0bdac25cd6df507f', {
-        //    authEndpoint: '/api/v1/pusher/auth',
-        //    auth: {
-        //        headers: {
-        //            'Authorization': 'API-TOKEN ' + this.user.api_token
-        //        }
-        //    },
-        //    encrypted: true
-        //});
         initCallback(this.user);
     }
 
@@ -69,18 +63,7 @@ class App {
         var authModal = new AuthModal();
         authModal.show();
 
-        ko.applyBindings(new LoginViewModel((userData) => {
-            authModal.hide();
-            this.init(userData, initCallback);
 
-        }), $('#login')[0]);
-    }
-
-    static getInstance() {
-        if (!instance) {
-            instance = new App();
-        }
-        return instance;
     }
 }
 

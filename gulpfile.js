@@ -3,7 +3,6 @@
  */
 'use strict';
 
-
 // grab our packages
 var gulp       = require('gulp'),
     jshint     = require('gulp-jshint'),
@@ -18,6 +17,7 @@ var gulp       = require('gulp'),
     gutil      = require('gulp-util'),
     watchify   = require('watchify'),
     assign     = require('lodash.assign'),
+    stringify  = require('stringify'),
     rename     = require('gulp-rename');
 
 var config = {
@@ -57,6 +57,7 @@ var bundlizer = new (function () {
 
     this.bundler = browserify(assign({}, watchify.args, config.browserify));
     this.bundler.transform(babelify, config.babelify);
+    this.bundler.transform('brfs');
     this.bundler.on('error', gutil.log.bind(gutil, 'Bundler Error'));
     this.bundler.on('log', gutil.log.bind(gutil, 'Bundler Info'));
 
@@ -67,12 +68,10 @@ var bundlizer = new (function () {
         return this;
     };
 
-    this.bundle = function () {
-        return this.bundler.bundle();
-    };
-
     this.compile = function () {
-        return this.bundle()
+        return this.bundler
+            //.transform(stringify(['.html']))
+            .bundle()
             .on('error', gutil.log.bind(gutil, 'Bundle Error'))
             .on('log', gutil.log.bind(gutil, 'Bundle Info'))
 

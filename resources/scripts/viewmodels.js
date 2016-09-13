@@ -3,20 +3,12 @@
  */
 
 import $ from 'jquery';
+require('bootstrap');
+
 import ko from 'knockout';
 import moment from 'moment';
 
-import {Message} from './models';
-
-let resizeAndScrollMessages = () => {
-    let $messages = $('.messages');
-
-    $messages
-        .getNiceScroll(0)
-        .resize();
-    $messages.getNiceScroll(0)
-        .doScrollTop(999999, 999);
-};
+import {Message, User} from './models';
 
 class IsUserTypingHandler {
     constructor(observableInput, observableUsersTypingCollection, channel, user) {
@@ -61,63 +53,56 @@ class IsUserTypingHandler {
     }
 }
 
-export class UserListViewModel {
-    constructor(channel) {
-        this.channel = channel;
-        this.searchQuery = ko.observable("");
-        this.users = ko.observableArray([]);
+//export class UserListViewModel {
+//    constructor(channel) {
+//        this.channel = channel;
+//        this.searchQuery = ko.observable("");
+//        this.users = ko.observableArray([]);
+//
+//        this.filteredUsers = ko.computed(() => {
+//            return ko.utils.arrayFilter(this.users(), (user) => {
+//                return user.name.toLowerCase().indexOf(this.searchQuery()) > -1;
+//            });
+//        });
+//
+//        this.channel.onUserAdded((user) => {
+//            this.add(user);
+//        });
+//
+//        this.channel.onUserRemoved((user) => {
+//            this.remove(user);
+//        });
+//    }
+//
+//    add(user) {
+//        console.log('Add User', user);
+//        if (this.users().indexOf(user) < 0) {
+//            this.users.push(user);
+//        }
+//    }
+//
+//    remove(user) {
+//        console.log('Remove User', user);
+//        this.users.remove(user);
+//    }
+//}
 
-        this.filteredUsers = ko.computed(() => {
-            return ko.utils.arrayFilter(this.users(), (user) => {
-                return user.name.toLowerCase().indexOf(this.searchQuery()) > -1;
-            });
-        });
-
-        this.channel.bind('pusher:subscription_succeeded', (status) => {
-            this.channel.members().each((data) => {
-                this.addUser(data.info);
-            });
-        });
-        this.channel.bind('pusher:member_added', (data) => {
-            this.addUser(data.info);
-        });
-        this.channel.bind('pusher:member_removed', (data) => {
-            this.removeUser(data.info);
-        });
-    }
-
-    addUser(user) {
-        console.log('User Added', user);
-        if (this.users().indexOf(user) < 0) {
-            this.users.push(user);
-        }
-    }
-
-    removeUser(user) {
-        console.log('User Removed', user);
-        this.users.remove(user);
-    }
-}
-
-export class ChannelListViewModel {
-    constructor(channels) {
-        this.channels = ko.observableArray(channels);
-    }
-}
+//export class ChannelListViewModel {
+//    constructor(channels) {
+//        this.channels = ko.observableArray(channels);
+//    }
+//}
 
 export class ChatViewModel {
-    constructor(channel, currentUser) {
+    constructor(channel) {
         this.channel = channel;
-        this.currentUser = currentUser;
         this.newMessage = ko.observable("");
-        this.messages = ko.observableArray([
-            //Message.newLocalMessage(this.user, 'Test Message (ingore)')
-        ]);
+        this.messages = ko.observableArray();
         this.typing = ko.observableArray();
-        this.isUserTypingHandler = new IsUserTypingHandler(this.newMessage, this.typing, channel, currentUser);
+        this.isUserTypingHandler = new IsUserTypingHandler(this.newMessage, this.typing, channel, this.channel.me);
 
         this.name = ko.computed(() => {
-            return this.currentUser.name;
+            return this.channel.me.name;
         });
 
         this.channel.getHistory().then((messages) => {
@@ -127,7 +112,13 @@ export class ChatViewModel {
         });
 
         this.channel.onNewMessage((user, message) => {
-            this.receive(user, message);
+            // our own message, let's confirm it
+            if (this.channel.me.name === user.name) {
+                return this.confirmMessage(message);
+            }
+
+            // someone elses message, let's process it
+            return this.pushMessage(user, message);
         });
     }
 
@@ -150,15 +141,6 @@ export class ChatViewModel {
         return returnMessageVM;
     }
 
-    receive(user, message) {
-        // FIXME: compare id instead?
-        if (this.currentUser.name === user.name) {
-            return this.confirmMessage(message);
-        } else {
-            return this.pushMessage(user, message);
-        }
-    }
-
     previousMessageVM() {
         let vm = null;
         let messages = this.messages();
@@ -172,17 +154,17 @@ export class ChatViewModel {
     }
 
     pushMessage(user, message) {
-        var isMessageLocal =  this.currentUser.name === user.name;
+        var isMessageLocal =  this.channel.me.name === user.name;
         var messageVM = this.previousMessageVM();
 
-        if (messageVM !== null && messageVM.name() === user.name) {
+        if (messageVM !== null && messageVM.user.name === user.name) {
             messageVM.attachMessage(message);
         } else {
             messageVM = new MessageViewModel(user, message, isMessageLocal);
             this.messages.push(messageVM);
         }
 
-        resizeAndScrollMessages();
+        this.resizeAndScrollMessages();
 
         return messageVM;
     }
@@ -195,9 +177,19 @@ export class ChatViewModel {
         }
 
         this.channel.sendMessage(text);
-        this.pushMessage(this.currentUser, Message.newLocalMessage(this.currentUser, text));
+        this.pushMessage(this.channel.me, Message.newLocalMessage(this.channel.me, text));
 
         this.newMessage("");
+    }
+
+    resizeAndScrollMessages() {
+        let $messages = $('.messages');
+
+        $messages
+            .getNiceScroll(0)
+            .resize();
+        $messages.getNiceScroll(0)
+            .doScrollTop(999999, 999);
     }
 }
 
@@ -217,7 +209,6 @@ class MessageBlock {
 
 export class MessageViewModel {
     constructor(user, message, isMessageLocal) {
-        //this.currentUser = currentUser;
         this.user = user;
         this.timestamp = ko.observable(moment.utc(this.created_at).local().format('LLL'));
         this.name = ko.observable(user.name);
@@ -245,23 +236,36 @@ export class MessageViewModel {
 
 export class LoginViewModel {
     constructor(onAuthSuccess) {
+        this.$login = $('#login');
+        this.$modal = $('#login-modal');
+
         this.name = ko.observable("");
         this.password = ko.observable("");
         this.error = ko.observable("");
-        this.authenticating = ko.observable("0");
+        this.authenticating = ko.observable(false);
         this.onAuthSuccess = onAuthSuccess;
 
         this.isAuthenticating = ko.computed(() => {
-            return this.authenticating() === "1";
+            return this.authenticating();
         });
+
+        ko.applyBindings(this, this.$login[0]);
     }
 
     setAuthenticating(bool) {
         console.log('Authenticating', bool);
-        this.authenticating(bool ? "1" : "0");
+        this.authenticating(bool);
     }
 
-    login() {
+    prompt() {
+        this.showModal();
+    }
+
+    init(userData) {
+        this.onAuthSuccess(new User(userData));
+    }
+
+    attemptAuth() {
         this.setAuthenticating(true);
 
         $.ajax({
@@ -273,19 +277,33 @@ export class LoginViewModel {
                 },
                 dataType: 'json'
             })
-            .done((currentUser) => {
-                console.log('Login Success', currentUser);
+            .done((userData) => {
+                console.log('Login Success', userData);
+                this.hideModal();
 
-                this.onAuthSuccess(currentUser);
+                this.init(userData);
             })
             .fail((data) => {
-                console.log('Login Error', error);
+                console.log('Login Error', data);
 
-                var error = data.responseJSON.error;
-                this.error(error.message);
+                this.error(data.responseJSON.error.message);
             })
             .always((data) => {
                 this.setAuthenticating(false);
             });
+    }
+
+    showModal() {
+        this.$modal.modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+
+    hideModal() {
+        this.$modal.modal('hide');
+        this.$modal.on('hidden.bs.modal', () => {
+            this.$login.remove();
+        });
     }
 }

@@ -1,0 +1,16 @@
+<div class="left-menu-header">
+    CHANNELS
+    <form action="#" class="input-group search">
+        <input type="text" placeholder="search..."/>
+    </form>
+</div>
+
+<menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
+    <li data-bind="click: join">
+        <img width="50" height="50" src="images/no-user-image.gif">
+        <div class="info">
+            <div class="user" data-bind="text: display_name"></div>
+            <div class="status on"> 13 users</div>
+        </div>
+    </li>
+</menu>

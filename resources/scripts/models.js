@@ -3,62 +3,10 @@
  */
 
 import $ from 'jquery';
-import ko from 'knockout';
+import 'jquery.nicescroll'; // jquery plugin
 import Pusher from 'pusher-js';
-import {ChatViewModel, UserListViewModel} from './viewmodels';
 
 Pusher.logToConsole = true;
-
-let bindjQueryHandlers = function () {
-    $(".ui .new-message-area").keypress(function (e) {
-        if (e.keyCode === 13 && !e.shiftKey) {
-            $('#new-message-form').submit();
-            e.preventDefault();
-        }
-    });
-
-    $(".ui .list-friends").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor: "#696c75",
-        cursorwidth: "8px",
-        cursorborder: "none"
-    });
-    $(".ui .messages").niceScroll({
-        autohidemode: false,
-        smoothscroll: false,
-        cursorcolor: "#cdd2d6",
-        cursorwidth: "8px",
-        cursorborder: "none"
-    });
-};
-
-let APIv1 = function (currentUser) {
-    this.request = function (method, endpoint, data) {
-        var url = '/api/v1/' + endpoint;
-
-        return new Promise(function (resolve, reject) {
-            $.ajax({
-                    type: method,
-                    url: url,
-                    headers: {
-                        'Authorization': 'API-TOKEN ' + currentUser.api_token
-                    },
-                    data: data,
-                    dataType: 'json'
-                })
-                .done(function (response) {
-                    resolve(response);
-                })
-                .fail(function (response) {
-                    reject(response);
-                })
-                .always(function (response) {
-                    console.log('API Response', url, data, response);
-                });
-        });
-    };
-};
 
 export class User {
     constructor(parameters) {
@@ -68,7 +16,6 @@ export class User {
         this.api_token = parameters.api_token;
 
         if (this.api_token) {
-            this.api = new APIv1(this);
             this.pusher = new Pusher('944b0bdac25cd6df507f', {
                 authEndpoint: '/api/v1/pusher/auth',
                 auth: {
@@ -82,11 +29,32 @@ export class User {
     }
 
     request(method, endpoint, data) {
-        return this.api.request(method, endpoint, data);
-    }
+        if (!this.api_token) {
+            throw "User does not have an api token";
+        }
 
-    getApi() {
-        return this.api;
+        let url = '/api/v1/' + endpoint;
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                    type:     method,
+                    url:      url,
+                    headers:  {
+                        'Authorization': 'API-TOKEN ' + this.api_token
+                    },
+                    data:     data,
+                    dataType: 'json'
+                })
+                .done((response) => {
+                    resolve(response);
+                })
+                .fail((response) => {
+                    reject(response);
+                })
+                .always((response) => {
+                    console.log('API Response', url, data, response);
+                });
+        });
     }
 
     getPusher() {
@@ -105,34 +73,21 @@ export class User {
 export class Channel {
     constructor(user, parameters) {
         this.user = user;
+        this.me = user;
 
         this.id = parameters.id;
         this.name = parameters.name;
         this.display_name = parameters.display_name;
         this.created_at = parameters.created_at;
-
-        //this.api = this.user.getApi();
-        //this.pusher = this.user.getPusher();
     }
 
     join() {
-        console.log(this.user);
-
         let pusher = this.user.getPusher();
-        console.log(pusher);
-
-        // cleanup
-        pusher.unsubscribe(this.name);
-        ko.cleanNode($('#chat')[0]);
-        ko.cleanNode($('#users')[0]);
-
-        // join new channel
         this.pChannel = pusher.subscribe(this.name);
+    }
 
-        bindjQueryHandlers();
+    onChannelJoin(callback) {
 
-        ko.applyBindings(new ChatViewModel(this, this.user), $('#chat')[0]);
-        ko.applyBindings(new UserListViewModel(this), $('#users')[0]);
     }
 
     getUrl() {
@@ -179,8 +134,21 @@ export class Channel {
         this.pChannel.trigger.call(this.pChannel, event, data);
     }
 
-    members() {
-        return this.pChannel.members;
+    onUserAdded(callback) {
+        this.pChannel.bind('pusher:subscription_succeeded', (status) => {
+            this.pChannel.members.each((data) => {
+                callback(new User(data.info));
+            });
+        });
+        this.pChannel.bind('pusher:member_added', (data) => {
+            callback(new User(data.info));
+        });
+    }
+
+    onUserRemoved(callback) {
+        this.pChannel.bind('pusher:member_removed', (data) => {
+            callback(new User(data.info));
+        });
     }
 
     onNewMessage(callback) {
@@ -196,7 +164,7 @@ export class Channel {
         return new Promise((resolve, reject) => {
             currentUser.request('GET', 'channels').then(
                 (response) => {
-                    var channels = response.data.channels.map((data) => {
+                    let channels = response.data.channels.map((data) => {
                         return new Channel(currentUser, data);
                     });
 
@@ -204,7 +172,7 @@ export class Channel {
                 },
                 (response) => {
                     console.log('Get All Error', response);
-                    resolve(response);
+                    reject(response);
                 }
             );
         });

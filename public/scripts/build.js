@@ -28220,8 +28220,6 @@ var _knockoutBootstrapped2 = _interopRequireDefault(_knockoutBootstrapped);
 
 var _models = require('./models');
 
-var _viewmodels = require('./viewmodels');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -28274,7 +28272,7 @@ var App = function () {
 
 _knockoutBootstrapped2.default.applyBindings(new App());
 
-},{"./knockout-bootstrapped":15,"./models":17,"./viewmodels":19,"jquery":3,"urijs":9}],17:[function(require,module,exports){
+},{"./knockout-bootstrapped":15,"./models":17,"jquery":3,"urijs":9}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -28611,30 +28609,7 @@ function applyUserTypingHandler(view) {
     });
 }
 
-},{}],19:[function(require,module,exports){
-'use strict';
-
-var _jquery = require('jquery');
-
-var _jquery2 = _interopRequireDefault(_jquery);
-
-var _knockout = require('knockout');
-
-var _knockout2 = _interopRequireDefault(_knockout);
-
-var _moment = require('moment');
-
-var _moment2 = _interopRequireDefault(_moment);
-
-var _models = require('./models');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-require('bootstrap'); /**
-                       * Created by Chad on 2016-09-12.
-                       */
-
-},{"./models":17,"bootstrap":1,"jquery":3,"knockout":4,"moment":5}]},{},[16])
+},{}]},{},[16])
 
 
 //# sourceMappingURL=build.js.map

@@ -5,7 +5,6 @@ import $ from 'jquery';
 import URI from 'urijs';
 import ko from './knockout-bootstrapped';
 import {Channel, User} from './models';
-import {LoginViewModel} from './viewmodels';
 
 class App {
     constructor() {

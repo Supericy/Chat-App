@@ -2,3 +2,6 @@
 .env
 /.idea
 /node_modules
+
+#compiled js
+/public/scripts

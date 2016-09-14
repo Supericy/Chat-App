@@ -11,13 +11,14 @@
     <link rel="stylesheet" href="/css/login-modal.css">
 
 <!--    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/URI.min.js"></script>-->
+<!--    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>-->
 <!---->
 <!--    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"></script>-->
 <!--    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.js"></script>-->
 <!--    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
 <!---->
 <!--    <script type="text/javascript" src="https://js.pusher.com/3.2/pusher.js"></script>-->
-<!--    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>-->
+
 <!--    <script src='http://cdnjs.cloudflare.com/ajax/libs/nicescroll/3.5.4/jquery.nicescroll.js'></script>-->
 
 </head>
@@ -34,7 +35,7 @@
     <chat-pane class="chat" params="channel: channel, me: me"></chat-pane>
 </div>
 
-<script src="/scripts/build.min.js"></script>
+<script src="/scripts/bundle.min.js"></script>
 
 </body>
 </html>

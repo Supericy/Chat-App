@@ -18,7 +18,8 @@ var gulp       = require('gulp'),
     watchify   = require('watchify'),
     assign     = require('lodash.assign'),
     stringify  = require('stringify'),
-    rename     = require('gulp-rename');
+    rename     = require('gulp-rename'),
+    size       = require('gulp-size');
 
 var config = {
     browserify: {
@@ -31,10 +32,6 @@ var config = {
         poll:        500
     },
 
-    babelify: {
-        presets: ['es2015']
-    },
-
     jshint: {
         esversion:  6,
         browserify: true,
@@ -43,70 +40,70 @@ var config = {
 
     app: {
         main:     'main.js',
-        compiled: 'build.js',
+        compiled: 'bundle.js',
         views:    './resources/views/',
         src:      './resources/scripts/',
         dest:     './public/scripts/'
     }
 };
 
-var bundlizer = new (function () {
-    config.browserify.entries = [
-        config.app.src + config.app.main
-    ];
+var bundlizer = new (class {
+    constructor() {
+        config.browserify.entries = [
+            config.app.src + config.app.main
+        ];
 
-    this.bundler = browserify(assign({}, watchify.args, config.browserify));
-    this.bundler.transform(babelify, config.babelify);
-    this.bundler.transform('brfs');
-    this.bundler.on('error', gutil.log.bind(gutil, 'Bundler Error'));
-    this.bundler.on('log', gutil.log.bind(gutil, 'Bundler Info'));
+        this.bundler = browserify(assign({}, watchify.args, config.browserify))
+            .on('error', gutil.log.bind(gutil, 'Bundler Error'))
+            .on('log', gutil.log.bind(gutil, 'Bundler Info'));
+    }
 
-    this.watchify = function () {
+    watchify() {
         this.bundler = watchify(this.bundler, config.watchify);
         this.bundler.on('update', this.run);
 
         return this;
-    };
+    }
 
-    this.compile = function () {
+    compile() {
         return this.bundler
-            //.transform(stringify(['.html']))
             .bundle()
             .on('error', gutil.log.bind(gutil, 'Bundle Error'))
             .on('log', gutil.log.bind(gutil, 'Bundle Info'))
-
             .pipe(source(config.app.compiled))
             .pipe(buffer())
-            .pipe(gulp.dest(config.app.dest))
+            .pipe(size())
             .pipe(maps.init({loadMaps: true}))
-            //.pipe(uglify())
-            //.pipe(rename({suffix: '.min'}))
+            .pipe(gulp.dest(config.app.dest))
+            .pipe(uglify())
+            .pipe(size())
+            .pipe(rename({suffix: '.min'}))
             .pipe(maps.write('./'))
             .pipe(gulp.dest(config.app.dest));
-    };
+    }
 
-    this.run = function () {
-        gulp.start('compile');
-    };
-});
+    run() {
+        return gulp.start('compile');
+    }
+})();
 
-gulp.task('lint', function () {
+gulp.task('lint', () => {
     return gulp.src(config.app.src + '**/*.js')
         .pipe(jshint(config.jshint))
         .pipe(jshint.reporter('default'));
 });
 
-gulp.task('clean', function () {
+gulp.task('clean', () => {
     return gulp.src([config.app.dest + '*'])
         .pipe(clean());
 });
 
-gulp.task('compile', ['lint', 'clean'], function () {
-    bundlizer.compile();
+gulp.task('compile', ['lint', 'clean'], () => {
+    return bundlizer.compile();
 });
 
-gulp.task('watch', [], function () {
-    bundlizer.watchify().run();
+gulp.task('watch', [], () => {
+    return bundlizer.watchify().run();
 });
 
 //// define the default task and add the watch task to it

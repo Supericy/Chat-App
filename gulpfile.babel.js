@@ -68,16 +68,19 @@ var bundlizer = new (class {
     compile() {
         return this.bundler
             .bundle()
-            .on('error', gutil.log.bind(gutil, 'Bundle Error'))
+            .on('error', function (err) {
+                gutil.log('Bundle Error', err);
+                this.emit('end');
+            })
             .on('log', gutil.log.bind(gutil, 'Bundle Info'))
             .pipe(source(config.app.compiled))
             .pipe(buffer())
             .pipe(size())
             .pipe(maps.init({loadMaps: true}))
             .pipe(gulp.dest(config.app.dest))
-            .pipe(uglify())
-            .pipe(size())
-            .pipe(rename({suffix: '.min'}))
+            //.pipe(uglify())
+            //.pipe(size())
+            //.pipe(rename({suffix: '.min'}))
             .pipe(maps.write('./'))
             .pipe(gulp.dest(config.app.dest));
     }

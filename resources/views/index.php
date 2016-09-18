@@ -35,7 +35,8 @@
     <chat-pane class="chat" params="channel: channel, me: me"></chat-pane>
 </div>
 
-<script src="/scripts/bundle.js"></script>
+<script src="/scripts/vendor-bundle.js"></script>
+<script src="/scripts/app-bundle.js"></script>
 
 </body>
 </html>

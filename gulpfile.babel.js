@@ -18,13 +18,13 @@ var gulp       = require('gulp'),
     assign     = require('lodash.assign'),
     rename     = require('gulp-rename'),
     size       = require('gulp-size'),
-    _          = require('lodash');
+    _          = require('lodash'),
+    resolve    = require('resolve');
 
 var config = {
     browserify: {
         debug:         true,
         basedir:       './',
-        fullPaths:     true,
         insertGlobals: true
     },
 
@@ -40,32 +40,39 @@ var config = {
     },
 
     app: {
-        main:     'main.js',
-        compiled: 'bundle.js',
+        //main:     'app.js',
+        //compiled: 'app-bundle.js'
+    },
+
+    vendor: {
+        //compiled: 'vendor-bundle.js'
+    },
+
+    paths: {
         views:    './resources/views/',
         src:      './resources/scripts/',
         dest:     './public/scripts/'
     }
 };
 
-var bundlizer = new (class {
+class Bundlizer {
     constructor(opts) {
-        config.browserify.entries = [
-            config.app.src + config.app.main
+        this.name = opts.name;
+
+        opts.entries = [
+            config.paths.src + this.name + '.js'
         ];
 
         this.bundler = browserify(assign(config.browserify, watchify.args, opts))
             .on('error', gutil.log.bind(gutil, 'Bundler Error'))
             .on('log', gutil.log.bind(gutil, 'Bundler Info'));
-
-        getNPMPackageIds().forEach((id) => {
-            this.bundler.external(id);
-        });
     }
 
     watchify() {
         this.bundler = watchify(this.bundler, config.watchify);
-        this.bundler.on('update', this.compile);
+        this.bundler.on('update', () => {
+            gulp.start('compile-' + this.name);
+        });
 
         return this;
     }
@@ -77,58 +84,99 @@ var bundlizer = new (class {
                 gutil.log('Bundle Error', err);
                 this.emit('end');
             })
-            .on('log', gutil.log.bind(gutil, 'Bundle Info'));
+            .on('log', gutil.log.bind(gutil, 'Bundle Info'))
+            .pipe(source(this.name + '-bundle.js'))
+            .pipe(buffer())
+            //.pipe(size())
+            .pipe(maps.init({loadMaps: true}))
+            .pipe(gulp.dest(config.paths.dest))
+            //.pipe(uglify())
+            //.pipe(size())
+            .pipe(rename({suffix: '.min'}))
+            .pipe(maps.write('./'))
+            .pipe(gulp.dest(config.paths.dest));
     }
 
     compile() {
         return gulp.start('compile');
     }
-})();
+
+    clean() {
+        return gulp.src([config.paths.dest + this.name + '*'])
+            .pipe(clean());
+    }
+
+    static Vendor(opts) {
+        let bundlizer = new Bundlizer({
+            name: 'vendor'
+        });
+
+        Bundlizer.getNpmPackageIds().forEach((id) => {
+            bundlizer.bundler.require(resolve.sync(id), {
+                expose: id
+            });
+        });
+
+        return bundlizer;
+    }
+
+    static App(opts) {
+        let bundlizer = new Bundlizer({
+            name: 'app'
+        });
+
+        Bundlizer.getNpmPackageIds().forEach((id) => {
+            bundlizer.bundler.external(id);
+        });
+
+        return bundlizer;
+    }
+
+    static getNpmPackageIds() {
+        // read package.json and get dependencies' package ids
+        var packageManifest = {};
+        try {
+            packageManifest = require('./package.json');
+        } catch (e) {
+            // does not have a package.json manifest
+        }
+        return _.keys(packageManifest.dependencies) || [];
+    }
+}
+
+let vendor = Bundlizer.Vendor();
+let app = Bundlizer.App();
 
 gulp.task('lint', () => {
-    return gulp.src(config.app.src + '**/*.js')
+    return gulp.src(config.paths.src + '**/*.js')
         .pipe(jshint(config.jshint))
         .pipe(jshint.reporter('default'));
 });
 
-gulp.task('clean', () => {
-    return gulp.src([config.app.dest + '*'])
-        .pipe(clean());
+gulp.task('clean-vendor', () => {
+    return vendor.clean();
 });
 
-gulp.task('compile', ['lint', 'clean'], () => {
-    console.log(getNPMPackageIds());
-
-    return bundlizer
-        .bundle()
-        .pipe(source(config.app.compiled))
-        .pipe(buffer())
-        .pipe(size())
-        .pipe(maps.init({loadMaps: true}))
-        //.pipe(gulp.dest(config.app.dest))
-        //.pipe(uglify())
-        //.pipe(size())
-        //.pipe(rename({suffix: '.min'}))
-        .pipe(maps.write('./'))
-        .pipe(gulp.dest(config.app.dest));
+gulp.task('clean-app', () => {
+    return app.clean();
 });
+
+gulp.task('compile-vendor', ['clean-vendor'], () => {
+    return vendor.bundle();
+});
+
+gulp.task('compile-app', ['clean-app', 'lint'], () => {
+    return app.bundle();
+});
+
+gulp.task('compile', ['lint', 'compile-vendor', 'compile-app']);
 
 gulp.task('watch', [], () => {
-    return bundlizer.watchify().compile();
+    vendor.watchify();
+    app.watchify();
+
+    gulp.start('compile');
 });
 
 //// define the default task and add the watch task to it
 gulp.task('default', ['watch']);
-
-
-function getNPMPackageIds() {
-    // read package.json and get dependencies' package ids
-    var packageManifest = {};
-    try {
-        packageManifest = require('./package.json');
-    } catch (e) {
-        // does not have a package.json manifest
-    }
-    return _.keys(packageManifest.dependencies) || [];
-
-}

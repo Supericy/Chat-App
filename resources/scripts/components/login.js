@@ -2,10 +2,8 @@
  * Created by Chad on 2016-09-13.
  */
 import $ from 'jquery';
-require('bootstrap');
-
 import ko from 'knockout';
-import { User} from '../models';
+import {User} from '../models';
 
 class LoginViewModel {
     constructor(params) {

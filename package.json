@@ -39,6 +39,7 @@
     "jshint": "^2.9.3",
     "jshint-stylish": "^2.2.1",
     "lodash.assign": "^4.2.0",
+    "resolve": "^1.1.7",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.7.0"
@@ -69,9 +70,6 @@
     ]
   },
   "browserify-shim": {
-    "jquery": {
-      "exports": "jQuery"
-    },
     "pusher-js": {
       "depends": [
         "jquery:jQuery"

@@ -66,6 +66,14 @@ class Bundlizer {
         this.bundler = browserify(assign(config.browserify, watchify.args, opts))
             .on('error', gutil.log.bind(gutil, 'Bundler Error'))
             .on('log', gutil.log.bind(gutil, 'Bundler Info'));
+
+        gulp.task('clean-' + this.name, () => {
+            return this.clean();
+        });
+
+        gulp.task('compile-' + this.name, ['clean-' + this.name].concat(opts['pre-compile-tasks'] || []), () => {
+            return this.bundle();
+        });
     }
 
     watchify() {
@@ -107,9 +115,9 @@ class Bundlizer {
     }
 
     static Vendor(opts) {
-        let bundlizer = new Bundlizer({
+        let bundlizer = new Bundlizer(assign({
             name: 'vendor'
-        });
+        }, opts));
 
         Bundlizer.getNpmPackageIds().forEach((id) => {
             bundlizer.bundler.require(resolve.sync(id), {
@@ -121,9 +129,9 @@ class Bundlizer {
     }
 
     static App(opts) {
-        let bundlizer = new Bundlizer({
+        let bundlizer = new Bundlizer(assign({
             name: 'app'
-        });
+        }, opts));
 
         Bundlizer.getNpmPackageIds().forEach((id) => {
             bundlizer.bundler.external(id);
@@ -145,28 +153,14 @@ class Bundlizer {
 }
 
 let vendor = Bundlizer.Vendor();
-let app = Bundlizer.App();
+let app = Bundlizer.App({
+    'pre-compile-tasks': ['lint']
+});
 
 gulp.task('lint', () => {
     return gulp.src(config.paths.src + '**/*.js')
         .pipe(jshint(config.jshint))
         .pipe(jshint.reporter('default'));
-});
-
-gulp.task('clean-vendor', () => {
-    return vendor.clean();
-});
-
-gulp.task('clean-app', () => {
-    return app.clean();
-});
-
-gulp.task('compile-vendor', ['clean-vendor'], () => {
-    return vendor.bundle();
-});
-
-gulp.task('compile-app', ['clean-app', 'lint'], () => {
-    return app.bundle();
 });
 
 gulp.task('compile', ['lint', 'compile-vendor', 'compile-app']);

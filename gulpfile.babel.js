@@ -4,27 +4,27 @@
 'use strict';
 
 // grab our packages
-var gulp       = require('gulp'),
-    jshint     = require('gulp-jshint'),
-    maps       = require('gulp-sourcemaps'),
-    amd        = require('amd-optimize'),
-    buffer     = require('vinyl-buffer'),
-    browserify = require('browserify'),
-    source     = require('vinyl-source-stream'),
-    babelify   = require('babelify'),
-    clean      = require('gulp-clean'),
-    uglify     = require('gulp-uglify'),
-    gutil      = require('gulp-util'),
-    watchify   = require('watchify'),
-    assign     = require('lodash.assign'),
-    stringify  = require('stringify'),
-    rename     = require('gulp-rename'),
-    size       = require('gulp-size');
+var gulp        = require('gulp'),
+    jshint      = require('gulp-jshint'),
+    maps        = require('gulp-sourcemaps'),
+    buffer      = require('vinyl-buffer'),
+    browserify  = require('browserify'),
+    source      = require('vinyl-source-stream'),
+    babelify    = require('babelify'),
+    clean       = require('gulp-clean'),
+    uglify      = require('gulp-uglify'),
+    gutil       = require('gulp-util'),
+    watchify    = require('watchify'),
+    assign      = require('lodash.assign'),
+    rename      = require('gulp-rename'),
+    size        = require('gulp-size');
 
 var config = {
     browserify: {
-        debug:   true,
-        basedir: './'
+        debug:     true,
+        basedir:   './',
+        fullPaths: true,
+        cacheFile: './storage/cache/browersify-cache.json'
     },
 
     watchify: {
@@ -53,7 +53,7 @@ var bundlizer = new (class {
             config.app.src + config.app.main
         ];
 
-        this.bundler = browserify(assign({}, watchify.args, config.browserify))
+        this.bundler = browserify(assign(config.browserify, watchify.args))
             .on('error', gutil.log.bind(gutil, 'Bundler Error'))
             .on('log', gutil.log.bind(gutil, 'Bundler Info'));
     }

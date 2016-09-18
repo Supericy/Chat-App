@@ -11,8 +11,10 @@ class UserListViewModel {
         this.users = ko.observableArray([]);
 
         this.filteredUsers = ko.computed(() => {
+            let query = this.searchQuery().toLowerCase();
+
             return ko.utils.arrayFilter(this.users(), (user) => {
-                return user.name.toLowerCase().indexOf(this.searchQuery()) > -1;
+                return user.name.toLowerCase().indexOf(query) > -1;
             });
         });
 

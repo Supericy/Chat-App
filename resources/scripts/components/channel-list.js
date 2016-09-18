@@ -8,15 +8,25 @@ class ChannelListViewModel {
     constructor(params) {
         this.channels = params.channels;
         this.channel = params.channel;
+        this.searchQuery = ko.observable('');
+
+        this.filteredChannels = ko.computed(() => {
+            let query = this.searchQuery().toLowerCase();
+
+            return ko.utils.arrayFilter(this.channels(), (channel) => {
+                return channel.display_name.toLowerCase().indexOf(query) > -1;
+            });
+        });
     }
 
     switchChannel(newChannel) {
         console.log('New Channel', newChannel);
 
-        this.channel().leave();
+        if (this.channel()) {
+            this.channel().leave();
+        }
 
-        newChannel.join();
-        this.channel(newChannel);
+        this.channel(newChannel.join());
     }
 }
 

@@ -1,12 +1,12 @@
 <div class="users">
     <div class="left-menu-header">
         USERS
-        <form action="#" class="input-group search" data-bind="textInput: searchQuery">
-            <input type="text" placeholder="search..."/>
+        <form action="#" class="input-group search">
+            <input type="text" placeholder="search..." data-bind="textInput: searchQuery"/>
         </form>
     </div>
 
-    <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers()">
+    <menu class="left-menu-body list-friends" data-bind="foreach: filteredUsers">
         <li>
             <img width="50" height="50" src="images/no-user-image.gif">
             <div class="info">

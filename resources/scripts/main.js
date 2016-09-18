@@ -30,15 +30,9 @@ class App {
             channels.forEach((channel) => {
                 this.channels.push(channel);
             });
+
+            this.channel(channels[0].join());
         });
-    }
-
-    switchChannel(newChannel) {
-        if (this.channel()) {
-            this.channel().leave();
-        }
-
-        this.channel(newChannel.join());
     }
 }
 

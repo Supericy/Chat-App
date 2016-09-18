@@ -2,12 +2,12 @@
     <div class="left-menu-header">
         CHANNELS
         <form action="#" class="input-group search">
-            <input type="text" placeholder="search..."/>
+            <input type="text" placeholder="search..." data-bind="textInput: searchQuery"/>
         </form>
     </div>
 
-    <menu class="left-menu-body list-friends list-channels" data-bind="foreach: channels">
-        <li data-bind="click: $root.switchChannel.bind($root)">
+    <menu class="left-menu-body list-friends list-channels" data-bind="foreach: filteredChannels">
+        <li data-bind="css: {'channel-joined': isJoined()}, click: $parent.switchChannel.bind($parent)">
             <img width="50" height="50" src="images/no-user-image.gif">
             <div class="info">
                 <div class="user" data-bind="text: display_name"></div>

@@ -1,24 +1,25 @@
 {
-  "name": "chat-backend",
+  "name": "chat-app",
   "version": "1.0.0",
-  "description": "php -S localhost:8000 -t ./public",
+  "description": "Chat App",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "gulp compile"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Supericy/Chat-Backend.git"
+    "url": "git+https://github.com/Supericy/Chat-App.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Supericy/Chat-Backend/issues"
+    "url": "https://github.com/Supericy/Chat-App/issues"
   },
-  "homepage": "https://github.com/Supericy/Chat-Backend#readme",
+  "homepage": "https://github.com/Supericy/Chat-App#readme",
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",

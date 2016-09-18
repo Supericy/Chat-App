@@ -4,27 +4,28 @@
 'use strict';
 
 // grab our packages
-var gulp        = require('gulp'),
-    jshint      = require('gulp-jshint'),
-    maps        = require('gulp-sourcemaps'),
-    buffer      = require('vinyl-buffer'),
-    browserify  = require('browserify'),
-    source      = require('vinyl-source-stream'),
-    babelify    = require('babelify'),
-    clean       = require('gulp-clean'),
-    uglify      = require('gulp-uglify'),
-    gutil       = require('gulp-util'),
-    watchify    = require('watchify'),
-    assign      = require('lodash.assign'),
-    rename      = require('gulp-rename'),
-    size        = require('gulp-size');
+var gulp       = require('gulp'),
+    jshint     = require('gulp-jshint'),
+    maps       = require('gulp-sourcemaps'),
+    buffer     = require('vinyl-buffer'),
+    browserify = require('browserify'),
+    source     = require('vinyl-source-stream'),
+    babelify   = require('babelify'),
+    clean      = require('gulp-clean'),
+    uglify     = require('gulp-uglify'),
+    gutil      = require('gulp-util'),
+    watchify   = require('watchify'),
+    assign     = require('lodash.assign'),
+    rename     = require('gulp-rename'),
+    size       = require('gulp-size'),
+    _          = require('lodash');
 
 var config = {
     browserify: {
-        debug:     true,
-        basedir:   './',
-        fullPaths: true,
-        cacheFile: './storage/cache/browersify-cache.json'
+        debug:         true,
+        basedir:       './',
+        fullPaths:     true,
+        insertGlobals: true
     },
 
     watchify: {
@@ -48,44 +49,38 @@ var config = {
 };
 
 var bundlizer = new (class {
-    constructor() {
+    constructor(opts) {
         config.browserify.entries = [
             config.app.src + config.app.main
         ];
 
-        this.bundler = browserify(assign(config.browserify, watchify.args))
+        this.bundler = browserify(assign(config.browserify, watchify.args, opts))
             .on('error', gutil.log.bind(gutil, 'Bundler Error'))
             .on('log', gutil.log.bind(gutil, 'Bundler Info'));
+
+        getNPMPackageIds().forEach((id) => {
+            this.bundler.external(id);
+        });
     }
 
     watchify() {
         this.bundler = watchify(this.bundler, config.watchify);
-        this.bundler.on('update', this.run);
+        this.bundler.on('update', this.compile);
 
         return this;
     }
 
-    compile() {
+    bundle() {
         return this.bundler
             .bundle()
             .on('error', function (err) {
                 gutil.log('Bundle Error', err);
                 this.emit('end');
             })
-            .on('log', gutil.log.bind(gutil, 'Bundle Info'))
-            .pipe(source(config.app.compiled))
-            .pipe(buffer())
-            .pipe(size())
-            .pipe(maps.init({loadMaps: true}))
-            .pipe(gulp.dest(config.app.dest))
-            //.pipe(uglify())
-            //.pipe(size())
-            //.pipe(rename({suffix: '.min'}))
-            .pipe(maps.write('./'))
-            .pipe(gulp.dest(config.app.dest));
+            .on('log', gutil.log.bind(gutil, 'Bundle Info'));
     }
 
-    run() {
+    compile() {
         return gulp.start('compile');
     }
 })();
@@ -102,12 +97,38 @@ gulp.task('clean', () => {
 });
 
 gulp.task('compile', ['lint', 'clean'], () => {
-    return bundlizer.compile();
+    console.log(getNPMPackageIds());
+
+    return bundlizer
+        .bundle()
+        .pipe(source(config.app.compiled))
+        .pipe(buffer())
+        .pipe(size())
+        .pipe(maps.init({loadMaps: true}))
+        //.pipe(gulp.dest(config.app.dest))
+        //.pipe(uglify())
+        //.pipe(size())
+        //.pipe(rename({suffix: '.min'}))
+        .pipe(maps.write('./'))
+        .pipe(gulp.dest(config.app.dest));
 });
 
 gulp.task('watch', [], () => {
-    return bundlizer.watchify().run();
+    return bundlizer.watchify().compile();
 });
 
 //// define the default task and add the watch task to it
 gulp.task('default', ['watch']);
+
+
+function getNPMPackageIds() {
+    // read package.json and get dependencies' package ids
+    var packageManifest = {};
+    try {
+        packageManifest = require('./package.json');
+    } catch (e) {
+        // does not have a package.json manifest
+    }
+    return _.keys(packageManifest.dependencies) || [];
+
+}

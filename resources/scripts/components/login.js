@@ -35,7 +35,7 @@ class LoginViewModel {
 
         $.ajax({
                 type:     "POST",
-                url:      '/api/v1/user/auth',
+                url:      '/chat/api/v1/user/auth',
                 data:     {
                     name:     this.name(),
                     password: this.password()

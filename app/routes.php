@@ -17,27 +17,35 @@ use App\Chat\Model\Message;
 use Laravel\Lumen\Concerns\RoutesRequests;
 
 $app->get('/', function () use ($app) {
-    return view('index');
+    return view('landing');
 });
 
+$app->group(['prefix' => '/chat', 'namespace' => 'App\Http\Controllers'], function ($app) {
+    /** @var RoutesRequests $app */
 
-$app->group(['prefix' => '/api/v1', 'namespace' => 'App\Http\Controllers'], function ($group) {
-    /** @var RoutesRequests $group */
-
-    $group->post('pusher/auth', 'PusherAuthController@authenticate');
-
-    $group->post('/user',       'UserController@create');
-    $group->post('/user/auth',  'UserController@authenticate');
-
-    $group->post('/chat/send',    'ChatController@sendMessage');
-    $group->get ('/chat/history', 'ChatController@history');
-
-    $group->get ('/channels',                   'ChannelController@getAll');
-    $group->post('/channel',                    'ChannelController@create');
-    $group->get ('/channel/{id}',               'ChannelController@get');
-    $group->get ('/channel/{id}/history',       'ChannelController@history');
-    $group->post('/channel/{id}/send-message',  'ChannelController@sendMessage');
+    $app->get('/', function () {
+        return view('chat');
+    });
 });
+
+$app->group(['prefix' => '/chat/api/v1', 'namespace' => 'App\Http\Controllers'], function ($app) {
+    /** @var RoutesRequests $app */
+
+    $app->post('pusher/auth', 'PusherAuthController@authenticate');
+
+    $app->post('/user',       'UserController@create');
+    $app->post('/user/auth',  'UserController@authenticate');
+
+    $app->post('/chat/send',    'ChatController@sendMessage');
+    $app->get ('/chat/history', 'ChatController@history');
+
+    $app->get ('/channels',                   'ChannelController@getAll');
+    $app->post('/channel',                    'ChannelController@create');
+    $app->get ('/channel/{id}',               'ChannelController@get');
+    $app->get ('/channel/{id}/history',       'ChannelController@history');
+    $app->post('/channel/{id}/send-message',  'ChannelController@sendMessage');
+});
+
 
 
 
@@ -60,4 +68,9 @@ $app->get('/broadcast', function() use ($app) {
     ]);
 
     return 'done2';
+});
+
+
+$app->get('/push-notification-test', function () use ($app) {
+    return view('push-notification-test');
 });

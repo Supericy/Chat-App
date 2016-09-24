@@ -8,6 +8,7 @@ import Pusher from 'pusher-js';
 import ko from 'knockout';
 
 //Pusher.logToConsole = true;
+const APIv1URL = '/chat/api/v1/';
 
 export class User {
     constructor(parameters) {
@@ -18,7 +19,7 @@ export class User {
 
         if (this.api_token) {
             this.pusher = new Pusher('944b0bdac25cd6df507f', {
-                authEndpoint: '/api/v1/pusher/auth',
+                authEndpoint: APIv1URL + 'pusher/auth',
                 auth:         {
                     headers: {
                         'Authorization': 'API-TOKEN ' + this.api_token
@@ -35,7 +36,7 @@ export class User {
             throw "User does not have an api token";
         }
 
-        let url = '/api/v1/' + endpoint;
+        let url = APIv1URL + endpoint;
 
         return new Promise((resolve, reject) => {
             $.ajax({

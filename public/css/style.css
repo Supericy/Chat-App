@@ -142,8 +142,8 @@ body {
     font-size: 16px;
 }
 
-.ui .list-channels .channel-joined {
-    background: rgba(0,0,0,0.2);
+.channel-joined {
+    background: rgba(0,0,0,0.05);
 }
 
 .ui .list-friends {
